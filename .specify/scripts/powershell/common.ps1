@@ -93,8 +93,15 @@ function Get-FeatureDir {
 }
 
 function Get-FeaturePathsEnv {
+    param([string]$FeatureName)
+
     $repoRoot = Get-RepoRoot
-    $currentBranch = Get-CurrentBranch
+    if ($FeatureName) {
+        $currentBranch = $FeatureName
+    } else {
+        $currentBranch = Get-CurrentBranch
+    }
+
     $hasGit = Test-HasGit
     $featureDir = Get-FeatureDir -RepoRoot $repoRoot -Branch $currentBranch
     

@@ -26,7 +26,10 @@ Relies on common helper functions in common.ps1
 param(
     [Parameter(Position=0)]
     [ValidateSet('claude','gemini','copilot','cursor-agent','qwen','opencode','codex','windsurf','kilocode','auggie','roo','codebuddy','amp','q')]
-    [string]$AgentType
+    [string]$AgentType,
+
+    [Parameter(Mandatory=$false)]
+    [string]$FeatureName
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,7 +39,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $ScriptDir 'common.ps1')
 
 # Acquire environment paths
-$envData = Get-FeaturePathsEnv
+$envData = Get-FeaturePathsEnv -FeatureName $FeatureName
 $REPO_ROOT     = $envData.REPO_ROOT
 $CURRENT_BRANCH = $envData.CURRENT_BRANCH
 $HAS_GIT       = $envData.HAS_GIT

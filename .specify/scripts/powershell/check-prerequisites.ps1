@@ -16,6 +16,7 @@
 
 [CmdletBinding()]
 param(
+    [string]$FeatureName,
     [switch]$Json,
     [switch]$RequireTasks,
     [switch]$IncludeTasks,
@@ -57,7 +58,7 @@ EXAMPLES:
 . "$PSScriptRoot/common.ps1"
 
 # Get feature paths and validate branch
-$paths = Get-FeaturePathsEnv
+$paths = Get-FeaturePathsEnv -FeatureName $FeatureName
 
 if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -HasGit:$paths.HAS_GIT)) { 
     exit 1 

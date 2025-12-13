@@ -1,0 +1,246 @@
+/**
+ * Homepage styles - Futuristic theme
+ */
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+.heroBanner {
+  padding: 4rem 0;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+}
+
+.heroContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  gap: 4rem;
+  width: 100%;
+}
+
+.heroContent {
+  flex: 1;
+  max-width: 600px;
+}
+
+.heroDescription {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.heroRobot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.secondaryButton {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.8rem 1.5rem;
+  border: 1px solid rgba(0, 217, 255, 0.4);
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.secondaryButton:hover {
+  color: #00D9FF;
+  border-color: #00D9FF;
+  background: rgba(0, 217, 255, 0.1);
+  text-decoration: none;
+}
+
+/* ============================================
+   WHY PHYSICAL AI SECTION
+   ============================================ */
+.whySection {
+  padding: 6rem 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 217, 255, 0.02) 50%, transparent 100%);
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #00D9FF;
+  margin-bottom: 0.5rem;
+}
+
+.sectionSubtitle {
+  text-align: center;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 3rem;
+}
+
+.statsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 3rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  transition: all 0.4s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  border-color: rgba(0, 217, 255, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 217, 255, 0.15);
+}
+
+.statNumber {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00D9FF 0%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* ============================================
+   TECH STACK SECTION
+   ============================================ */
+.techSection {
+  padding: 5rem 0;
+}
+
+.techGrid {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.techItem {
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.techItem:hover {
+  border-color: var(--tech-color, #00D9FF);
+  box-shadow: 0 0 20px var(--tech-color, rgba(0, 217, 255, 0.3));
+  transform: scale(1.05);
+}
+
+/* ============================================
+   CTA SECTION
+   ============================================ */
+.ctaSection {
+  padding: 6rem 0;
+  text-align: center;
+  background: linear-gradient(180deg, transparent 0%, rgba(124, 58, 237, 0.05) 50%, transparent 100%);
+}
+
+.ctaTitle {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, #00D9FF 0%, #7C3AED 50%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.ctaSubtitle {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2rem;
+}
+
+.ctaButton {
+  display: inline-block;
+  padding: 1.2rem 3rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #00D9FF 0%, #7C3AED 100%);
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 30px rgba(0, 217, 255, 0.3);
+}
+
+.ctaButton:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 50px rgba(0, 217, 255, 0.4), 0 0 60px rgba(124, 58, 237, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+    min-height: auto;
+  }
+
+  .heroContainer {
+    flex-direction: column-reverse;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .heroContent {
+    max-width: 100%;
+  }
+
+  .buttons {
+    justify-content: center;
+  }
+
+  .statsContainer {
+    gap: 1.5rem;
+  }
+
+  .statCard {
+    padding: 1.5rem 2rem;
+  }
+
+  .statNumber {
+    font-size: 2.5rem;
+  }
+}

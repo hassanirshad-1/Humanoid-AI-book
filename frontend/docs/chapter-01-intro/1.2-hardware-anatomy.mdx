@@ -1,0 +1,307 @@
+# Lesson 1.2: The Body of a Physical AI
+
+In this lesson, you'll learn the anatomy of a humanoid robot. Understanding the hardware is essential—you can't write effective control code if you don't know what you're controlling.
+
+---
+
+## The Concrete Hook: Meet Your Robot
+
+The code you write in this book will control a simulated version of the **Unitree G1**—a real humanoid robot that you could actually buy and run your trained policies on.
+
+![Unitree G1 Diagram](./include/assets/unitree_g1_diagram.png)
+
+This diagram shows the **kinematic chain** of the G1 robot. It's a hierarchical structure of links (the rigid body parts) and joints (the moveable connections). Think of it as the robot's skeleton.
+
+By the end of this lesson, you'll understand:
+- What actuators, sensors, and compute mean for a robot
+- How to read a robot's specification sheet
+- What "degrees of freedom" means and why it matters
+- How to represent robot state in code
+
+---
+
+## The Intuition: The Robot Body System
+
+A humanoid robot has three fundamental systems that work together, just like your own body:
+
+### 1. Actuators — The Muscles
+
+**Actuators** are the components that create movement. In humanoid robots, these are typically electric motors located at each joint.
+
+When your policy outputs an "action," you're telling these motors what to do. Depending on the control mode, you might specify:
+
+- **Torque**: How hard to push (measured in Newton-meters, N·m)
+- **Position**: What angle to move to (measured in radians)
+- **Velocity**: How fast to move (measured in radians per second)
+
+The Unitree G1 uses **high-torque brushless motors** with integrated encoders. Each motor can exert up to 40 N·m of torque and respond to commands at 500 Hz (500 times per second).
+
+### 2. Sensors — The Nervous System
+
+**Sensors** gather information about the world and the robot's own body. The key sensors for locomotion are:
+
+| Sensor Type | What It Measures | Where It's Located |
+|------------|-----------------|-------------------|
+| **Joint Encoders** | Exact angle of each joint | Built into each motor |
+| **IMU** (Inertial Measurement Unit) | Body orientation, acceleration | Torso/pelvis |
+| **Force/Torque Sensors** | Ground contact force | Feet/ankles |
+| **Cameras** | Visual information | Head (optional) |
+
+The combination of joint encoders and IMU data gives the robot **proprioception**—the sense of its own body position and movement. This is analogous to how you know where your arm is without looking at it.
+
+### 3. Compute — The Brain
+
+The **onboard computer** runs the policy. It:
+1. Reads sensor data (hundreds of numbers, 500+ times per second)
+2. Feeds this data through the neural network
+3. Outputs motor commands
+4. Repeats—all in real-time
+
+The G1 includes an NVIDIA Jetson or similar embedded GPU for running neural network inference quickly enough for real-time control.
+
+---
+
+## The Analogy: Your Own Body
+
+To make this concrete, let's map robot components to your own body:
+
+| Robot Component | Human Equivalent |
+|-----------------|-----------------|
+| Motors (actuators) | Muscles |
+| Joint encoders | Proprioceptive nerves (muscle spindles) |
+| IMU | Inner ear (vestibular system) |
+| Force sensors | Touch receptors in feet |
+| Onboard computer | Brain and spinal cord |
+| Battery | Food/metabolism |
+
+When you walk, you don't consciously think about each muscle contraction. Your brain has learned a walking "policy" that runs automatically. Your proprioception tells you where your limbs are; your inner ear tells you which way is up; your foot sensors tell you when you've made contact with the ground.
+
+Building a Physical AI means giving a robot this same integrated system—sensors feeding into a learned policy that commands the actuators—so it can move as fluidly as you do.
+
+---
+
+## The Formalism: Degrees of Freedom (DOF)
+
+The complexity of a robot is often summarized by its **Degrees of Freedom (DOF)**. One DOF equals one independent axis of motion.
+
+### Human DOF for Reference
+- Shoulder: 3 DOF (up/down, forward/back, twist)
+- Elbow: 1 DOF (bend)
+- Wrist: 3 DOF
+- **Total arm: 7 DOF**
+
+### Unitree G1 Specifications
+
+The Unitree G1 has between **23-35 DOF** depending on the configuration:
+
+| Body Part | Joints | DOF |
+|-----------|--------|-----|
+| **Left Leg** | Hip (3-axis), Knee, Ankle (2-axis) | 6 |
+| **Right Leg** | Hip (3-axis), Knee, Ankle (2-axis) | 6 |
+| **Torso** | Waist (optional) | 0-3 |
+| **Left Arm** | Shoulder (3-axis), Elbow, Wrist (3-axis) | 5-7 |
+| **Right Arm** | Shoulder (3-axis), Elbow, Wrist (3-axis) | 5-7 |
+| **Hands** | Fingers (optional) | 0-12 |
+| **Total** | | **23-35** |
+
+### Why DOF Matters
+
+More DOF means:
+- ✅ **More capability**: The robot can move in more ways
+- ✅ **More dexterity**: It can manipulate objects, navigate complex terrain
+- ❌ **Harder control**: The policy must output more numbers
+- ❌ **More expensive**: More motors = more cost
+
+If a robot has 23 actuated joints and runs at 100 Hz, your policy must make **2,300 decisions per second**. This is why we need neural networks—no human could hand-tune that many parameters.
+
+---
+
+## The Formalism: State and Action Vectors
+
+In code, we represent the robot's state and actions as **vectors** (arrays of numbers). Here's what they look like for the G1:
+
+### State Vector (What the robot "feels")
+
+```python
+import numpy as np
+
+# State vector breakdown for Unitree G1
+state = np.concatenate([
+    joint_positions,      # (23,) - angle of each joint in radians
+    joint_velocities,     # (23,) - angular velocity of each joint
+    body_orientation,     # (4,)  - quaternion [w, x, y, z]
+    body_angular_velocity,# (3,)  - roll/pitch/yaw rates
+    body_linear_velocity, # (3,)  - x/y/z velocity
+    foot_contact,         # (2,)  - binary: left/right foot touching ground
+])
+# Total: 23 + 23 + 4 + 3 + 3 + 2 = 58 dimensions
+```
+
+### Action Vector (What the robot "does")
+
+```python
+# Action vector for Unitree G1
+action = np.array([
+    # Target torques for each of 23 joints
+    left_hip_pitch_torque,
+    left_hip_roll_torque,
+    left_hip_yaw_torque,
+    left_knee_torque,
+    left_ankle_pitch_torque,
+    left_ankle_roll_torque,
+    # ... (right leg)
+    # ... (arms)
+    # ... (waist if applicable)
+])
+# Shape: (23,) for a 23-DOF robot
+```
+
+### Putting It Together
+
+Every timestep (every 10ms at 100 Hz), your policy does this:
+
+```python
+def policy_step(neural_network, sensor_data):
+    """One iteration of the sense-plan-act loop."""
+    
+    # 1. SENSE: Construct state vector from sensors
+    state = np.concatenate([
+        sensor_data.joint_positions,
+        sensor_data.joint_velocities,
+        sensor_data.imu_orientation,
+        sensor_data.imu_angular_velocity,
+        sensor_data.base_velocity,
+        sensor_data.foot_contacts,
+    ])
+    
+    # 2. PLAN: Run neural network
+    action = neural_network.forward(state)
+    
+    # 3. ACT: Send to motors
+    return action  # Shape: (23,)
+```
+
+---
+
+## The Gotchas: Reality vs. Simulation
+
+In simulation, everything is ideal. In reality (and good simulators), motors have real physical limitations:
+
+### 1. Torque Limits
+
+Motors can only push so hard. If your policy asks for 100 N·m but the motor maxes out at 40 N·m, the command gets **clamped**:
+
+```python
+# What happens inside the physics engine
+requested_torque = 100.0  # N·m
+max_torque = 40.0         # Motor specification
+applied_torque = np.clip(requested_torque, -max_torque, max_torque)
+# applied_torque = 40.0
+```
+
+**Implication**: Your policy must learn to work within physical limits. Asking for impossible torques doesn't magically make the robot stronger.
+
+### 2. Actuator Delay
+
+There's a gap between "thinking" and "moving." When your policy outputs an action, it takes a few milliseconds for the motor to actually respond:
+
+```
+Time 0ms: Policy computes action
+Time 2ms: Command reaches motor controller
+Time 5ms: Motor begins applying torque
+Time 10ms: Full torque achieved
+```
+
+This delay matters for fast movements. During training, we often **simulate this delay** to ensure policies are robust to it.
+
+### 3. Sensor Noise
+
+Real sensors aren't perfect. Joint encoders might have ±0.001 radian noise. IMUs drift over time. Force sensors have measurement uncertainty.
+
+Good simulators add random noise to sensor readings during training, so policies learn to handle imperfect information.
+
+### 4. Gear Backlash
+
+Many robot joints use gears to convert fast motor rotation into slow, powerful joint movement. But gears have "play"—a tiny gap where the motor can rotate without moving the joint. This creates nonlinear behavior that's tricky to model perfectly.
+
+---
+
+## Practical Exercise: Reading Specifications
+
+Practice reading real robot specifications. Here's an excerpt from a typical motor datasheet:
+
+| Specification | Value |
+|--------------|-------|
+| Rated Torque | 25 N·m |
+| Peak Torque | 40 N·m |
+| Rated Speed | 20 rad/s |
+| Encoder Resolution | 4096 counts/revolution |
+| Control Frequency | 500 Hz |
+| Mass | 450 g |
+
+**Questions to consider:**
+1. If I need to spin a joint at 30 rad/s, will this motor work? (Answer: No, max is 20 rad/s)
+2. What's the angular precision? (Answer: 2π/4096 = 0.0015 rad ≈ 0.09°)
+3. How often can I update motor commands? (Answer: Every 2ms, at 500 Hz)
+
+---
+
+## Knowledge Check ✓
+
+Before moving on, make sure you can answer:
+
+1. **What are the three main systems** in a humanoid robot?
+2. **What is proprioception**, and which sensors provide it?
+3. **If a robot has 35 DOF and runs at 100 Hz**, how many motor commands does it compute per second?
+4. **What is torque clamping**, and why does it matter for policy training?
+
+---
+
+## Try This: Design a State Vector
+
+Imagine you're designing a state vector for a simpler robot: a 2-DOF robotic arm (shoulder and elbow joints only). What information would you include?
+
+Write out your state vector with dimensions:
+```python
+state = np.array([
+    # Your answer here...
+])
+```
+
+Possible answer (don't peek until you've tried!):
+<details>
+<summary>Click to reveal answer</summary>
+
+```python
+state = np.array([
+    shoulder_angle,       # 1 value
+    elbow_angle,          # 1 value  
+    shoulder_velocity,    # 1 value
+    elbow_velocity,       # 1 value
+    end_effector_x,       # 1 value (optional: where is the hand?)
+    end_effector_y,       # 1 value
+    target_x,             # 1 value (if we have a goal position)
+    target_y,             # 1 value
+])
+# Total: 8 dimensions
+```
+
+</details>
+
+---
+
+## Summary
+
+In this lesson, you learned:
+- Robots have **actuators** (motors), **sensors** (encoders, IMU), and **compute** (onboard computer)
+- **DOF** measures robot complexity; more DOF = more capability but harder control
+- **State vectors** capture what the robot senses; **action vectors** capture what it does
+- Real motors have **limits and delays** that policies must account for
+
+---
+
+## What's Next?
+
+Now that you understand the robot's body, it's time to bring it to life! In the next lesson, you'll install the MuJoCo physics simulator and see the Unitree G1 standing in a virtual world on your own computer.
+
+**→ Continue to [Lesson 1.3: Entering "The Matrix"](./1.3-simulation-setup.mdx)**
