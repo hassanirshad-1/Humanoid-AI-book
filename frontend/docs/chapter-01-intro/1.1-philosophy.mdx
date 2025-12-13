@@ -1,0 +1,266 @@
+# Lesson 1.1: Why Did the Robot Fall?
+
+Welcome to the first lesson of your journey into Physical AI. By the end of this chapter, you will understand the fundamental difference between classical robotics and modern AI-driven approaches, and you'll have a clear mental model of how robots learn to move.
+
+---
+
+## The Concrete Hook: A Tale of Two Robots
+
+Watch this comparison carefully. On the left, you see robots from the 2015 DARPA Robotics Challenge—the most advanced robots in the world at that time. They stumble, fall, and move with painful hesitation. On the right, you see videos from 2024: humanoid robots running, jumping, and even doing backflips.
+
+![Falling Robot Compilation](./include/assets/falling_robot_compilation.png)
+
+**What changed in just nine years?**
+
+It wasn't the hardware—motors and sensors have only improved incrementally. It wasn't the physics—gravity is still 9.8 m/s². The revolution was in the *software*. Specifically, in how we think about robot control.
+
+The 2015 robots were running **hand-coded rules**. Engineers spent months writing thousands of lines of code that said things like: "If the left foot is at angle X and velocity Y, then apply torque Z to the hip." This approach is brittle. If the robot encounters a situation the programmer didn't anticipate—a gust of wind, an uneven surface, a slightly different weight distribution—it doesn't know what to do. It falls.
+
+The 2024 robots are running **learned policies**. Instead of telling the robot exactly what to do, we give it a goal ("walk forward without falling") and let it figure out the rest through millions of simulated attempts. The robot develops an intuition for physics that no human could ever program by hand.
+
+This is the shift from **Classical Robotics** to **Physical AI**. And understanding this shift is the key to everything else in this book.
+
+---
+
+## The Intuition: Puppets vs. Animals
+
+Let's build an intuition for this difference with an analogy.
+
+### The Puppet Approach (Classical Robotics)
+
+Imagine controlling a marionette puppet. You have strings attached to each limb, and you must consciously pull the right strings in the right sequence to make the puppet walk. Every movement requires your explicit attention. If the stage has a slight slope you didn't expect, the puppet trips because you hadn't planned for that scenario.
+
+This is how classical robots work. A human programmer is the puppeteer, and the control code is the strings. The robot can only do exactly what it was told to do, no more, no less.
+
+### The Animal Approach (Physical AI)
+
+Now think about a cat. A cat can walk on any surface—carpet, tile, grass, gravel—without conscious thought. It can recover from stumbles, adjust to injuries, and navigate obstacles it has never seen before. The cat wasn't "programmed" to handle each surface; its brain learned a general strategy for locomotion that generalizes to new situations.
+
+This is what Physical AI aims to achieve. Instead of programming every possible scenario, we train a neural network through experience. The robot develops reflexes and intuitions, much like an animal does.
+
+### The Bicycle Analogy
+
+Here's another way to think about it. Remember learning to ride a bicycle? No one gave you a physics equation for "balance." You didn't study the moment of inertia or calculate the optimal handlebar angle. You just... tried. You fell. You tried again. Eventually, after many attempts, your brain built an internal model—a "policy"—that maps "feeling of tilting left" to "turn handlebar left."
+
+This is *exactly* how we train robots today. We don't tell them *how* to walk. We give them a reward for moving forward and a penalty for falling. Over millions of simulated attempts, they discover optimal strategies that emerge from trial and error.
+
+---
+
+## The Formalism: The Policy π(a|s)
+
+Now let's get a bit more technical. In the language of AI and machine learning, we call the robot's decision-making strategy a **policy**. A policy is simply a function that maps the current situation to an action.
+
+We write it as:
+
+```
+π(a|s)
+```
+
+This reads as: "The policy π gives you the probability of taking **action** `a` given the current **state** `s`."
+
+Let's break this down:
+
+### State (s)
+The **state** is a complete snapshot of everything the robot knows about itself and the world at a given moment. For a humanoid robot, this typically includes:
+
+- **Joint positions**: The angle of every joint (hip, knee, ankle, shoulder, elbow, etc.)
+- **Joint velocities**: How fast each joint is moving
+- **Body orientation**: Which way is "up"? Is the robot tilted?
+- **Contact information**: Are the feet touching the ground?
+- **Velocity**: How fast is the robot's center of mass moving?
+
+For the Unitree G1 robot we'll use in this book, the state vector might have 50+ dimensions.
+
+### Action (a)
+The **action** is what the robot actually does—the commands sent to its motors. For each joint, this is typically either:
+
+- **Torque commands**: How much force to apply at each joint
+- **Position targets**: What angle each joint should move toward
+
+For a 23-joint robot, the action is a 23-dimensional vector, with one value for each motor.
+
+### The Policy Function
+In classical robotics, `π` was implemented as a massive tree of `if-then-else` statements:
+
+```python
+# Classical approach (pseudo-code)
+def classical_policy(state):
+    if state.phase == "swing_left_leg":
+        if state.hip_angle < 0.2:
+            return {"left_hip": 0.5, "left_knee": -0.3, ...}
+        elif state.hip_angle < 0.4:
+            return {"left_hip": 0.3, "left_knee": -0.5, ...}
+        # ... hundreds more conditions
+    elif state.phase == "stance_left_leg":
+        # ... hundreds more conditions
+    # ... and so on for every possible state
+```
+
+In Physical AI, `π` is a neural network:
+
+```python
+# Physical AI approach
+def learned_policy(state):
+    # A neural network with millions of parameters
+    action = neural_network(state)
+    return action
+```
+
+The neural network learns the right mapping from states to actions through training, rather than having each case explicitly programmed.
+
+---
+
+## The Formalism: The Markov Decision Process (MDP)
+
+To be mathematically rigorous, we frame robot control as a **Markov Decision Process (MDP)**. This is the standard formalism used throughout reinforcement learning.
+
+An MDP is defined by a five-element tuple: `(S, A, R, P, γ)`
+
+| Symbol | Name | Description |
+|--------|------|-------------|
+| **S** | State Space | The set of all possible states the robot can be in |
+| **A** | Action Space | The set of all possible actions the robot can take |
+| **R** | Reward Function | `R(s, a)` — how "good" a state-action pair is |
+| **P** | Transition Probability | `P(s'|s, a)` — the physics of the world |
+| **γ** | Discount Factor | How much we value future rewards vs. immediate ones |
+
+### Code Representation
+
+Here's how we might represent this in Python:
+
+```python
+import numpy as np
+
+class SimpleMDP:
+    """
+    A conceptual representation of a Markov Decision Process.
+    This is for understanding—we'll use proper RL libraries later.
+    """
+    
+    def __init__(self, state_dim, action_dim):
+        self.state_dim = state_dim    # e.g., 50 for position/velocity
+        self.action_dim = action_dim  # e.g., 23 for joint torques
+        
+    def get_state(self, robot_data):
+        """Extract the state vector from sensor data."""
+        state = np.concatenate([
+            robot_data.joint_positions,    # Shape: (23,)
+            robot_data.joint_velocities,   # Shape: (23,)
+            robot_data.body_orientation,   # Shape: (4,) quaternion
+        ])
+        return state
+    
+    def compute_reward(self, state, action, next_state):
+        """
+        The reward function—this is where we define our goals.
+        Positive reward for moving forward, negative for falling.
+        """
+        forward_velocity = next_state[0]  # Assume x-velocity is first
+        height = next_state[2]            # Assume z-position is third
+        
+        # Reward moving forward
+        reward = forward_velocity * 1.0
+        
+        # Penalize falling (height too low)
+        if height < 0.3:
+            reward -= 100  # Big penalty for falling!
+        
+        # Small penalty for using too much energy
+        reward -= 0.01 * np.sum(action ** 2)
+        
+        return reward
+    
+    def step(self, state, action):
+        """
+        Execute one timestep of the simulation.
+        In practice, this is done by a physics engine like MuJoCo.
+        """
+        next_state = physics_engine.simulate(state, action)
+        reward = self.compute_reward(state, action, next_state)
+        done = self.check_termination(next_state)
+        return next_state, reward, done
+```
+
+### The Goal: Find the Optimal Policy
+
+The entire goal of robot learning is to find the **optimal policy** `π*`—the policy that maximizes the expected sum of future rewards:
+
+```
+π* = argmax_π E[ Σ γ^t * R(s_t, a_t) ]
+```
+
+In plain English: find the strategy that gets the most reward over time.
+
+---
+
+## The Reality Check: The Sim-to-Real Gap
+
+Before you get too excited, there's a major challenge we need to address: the **sim-to-real gap**.
+
+Training robots in simulation is powerful because we can run millions of trials in hours instead of years. But there's a catch: simulation is *perfect*, and reality is *messy*.
+
+### What's Different in the Real World?
+
+| Aspect | Simulation | Reality |
+|--------|------------|---------|
+| Sensors | Perfect, noise-free | Noisy, sometimes failing |
+| Motors | Instant, unlimited | Delayed, limited torque |
+| Ground | Perfectly flat | Uneven, varying friction |
+| Physics | Simplified model | Complex, unknowable details |
+
+### How Do We Bridge the Gap?
+
+Researchers use several techniques:
+
+1. **Domain Randomization**: During training, randomly vary simulation parameters (friction, mass, motor delays) so the policy learns to handle uncertainty.
+
+2. **System Identification**: Carefully measure the real robot's physics and tune the simulator to match.
+
+3. **Fine-tuning on Real Hardware**: Do most training in simulation, then refine with a few real-world trials.
+
+We'll explore these techniques in later chapters. For now, just remember: what works in simulation doesn't automatically work on a real robot.
+
+---
+
+## Knowledge Check ✓
+
+Before moving on, make sure you can answer these questions:
+
+1. **What is the key difference** between classical robotics control and Physical AI?
+2. **What does π(a|s) represent**, and what are 's' and 'a'?
+3. **Name the five components** of a Markov Decision Process (MDP).
+4. **What is the sim-to-real gap**, and why does it matter?
+
+---
+
+## Try This: Thought Experiment
+
+Imagine you're designing a policy for a robot that needs to open a door. Think about:
+
+1. What would be in the **state** `s`? (Hint: What does the robot need to know?)
+2. What would be in the **action** `a`? (Hint: What can the robot physically do?)
+3. What would the **reward function** look like? (Hint: What's good and what's bad?)
+
+Write down your answers before the next lesson. We'll revisit this example later.
+
+---
+
+## Further Reading
+
+If you want to dive deeper into the concepts from this lesson:
+
+- Miki, T., et al. (2022). *Learning robust perceptive locomotion for quadrupedal robots in the wild.* Science Robotics, 7(62). — Shows how dogs robots learned to navigate outdoor terrain.
+
+- Octo Model Team et al. (2023). *Octo: An Open-Source General-Purpose Robot Policy.* arXiv preprint arXiv:2310.08864. — A modern general-purpose robot policy.
+
+- Brohan, A., et al. (2023). *RT-2: Vision-Language-Action Models with Web-Scale Knowledge.* Conference on Robot Learning (CoRL). — How large language models are being combined with robot control.
+
+- Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction.* — The classic textbook on RL theory.
+
+---
+
+## What's Next?
+
+In the next lesson, we'll zoom in on the robot itself. What sensors does it have? How do its motors work? You'll learn the "anatomy" of a humanoid robot so you can understand exactly what your code is controlling.
+
+**→ Continue to [Lesson 1.2: The Body of a Physical AI](./1.2-hardware-anatomy.mdx)**

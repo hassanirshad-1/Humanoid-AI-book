@@ -1,0 +1,227 @@
+.robotContainer {
+    position: relative;
+    width: 300px;
+    height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Floating robot animation */
+.robot {
+    width: 200px;
+    height: auto;
+    animation: robotFloat 4s ease-in-out infinite;
+    filter: drop-shadow(0 20px 40px rgba(0, 217, 255, 0.3));
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes robotFloat {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+/* Head subtle movement */
+.head {
+    animation: headTilt 6s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+@keyframes headTilt {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(2deg);
+    }
+
+    75% {
+        transform: rotate(-2deg);
+    }
+}
+
+/* Eyes blinking */
+.eyes {
+    animation: blink 4s ease-in-out infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    45%,
+    55%,
+    100% {
+        transform: scaleY(1);
+    }
+
+    50% {
+        transform: scaleY(0.1);
+    }
+}
+
+/* Antenna pulse */
+.antenna {
+    animation: antennaPulse 2s ease-in-out infinite;
+}
+
+@keyframes antennaPulse {
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Arms subtle movement */
+.leftArm {
+    animation: armSwayLeft 5s ease-in-out infinite;
+    transform-origin: top right;
+}
+
+.rightArm {
+    animation: armSwayRight 5s ease-in-out infinite;
+    transform-origin: top left;
+}
+
+@keyframes armSwayLeft {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(-3deg);
+    }
+}
+
+@keyframes armSwayRight {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(3deg);
+    }
+}
+
+/* Glowing orbs background */
+.glowOrb {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(0, 217, 255, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: orbPulse 4s ease-in-out infinite;
+    z-index: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.glowOrbSecondary {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: orbPulse 4s ease-in-out infinite 1s;
+    z-index: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes orbPulse {
+
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Floating particles */
+.particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #00D9FF;
+    border-radius: 50%;
+    animation: particleFloat 5s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(0, 217, 255, 0.8);
+}
+
+.particle:nth-child(odd) {
+    background: #7C3AED;
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.8);
+}
+
+@keyframes particleFloat {
+
+    0%,
+    100% {
+        transform: translateY(100px) scale(0.5);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateY(-50px) scale(1);
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-150px) scale(0.5);
+        opacity: 0;
+    }
+}
+
+/* Ground reflection */
+.reflection {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 20px;
+    background: radial-gradient(ellipse, rgba(0, 217, 255, 0.3) 0%, transparent 70%);
+    filter: blur(5px);
+}

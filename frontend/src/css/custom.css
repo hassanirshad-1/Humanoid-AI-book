@@ -1,0 +1,416 @@
+/**
+ * Futuristic CSS Theme for Physical AI Textbook
+ * Dark neon aesthetic with cyan and purple accents
+ */
+
+/* ============================================
+   CSS VARIABLES - FUTURISTIC PALETTE
+   ============================================ */
+:root {
+  /* Primary colors */
+  --ifm-color-primary: #00D9FF;
+  --ifm-color-primary-dark: #00C4E6;
+  --ifm-color-primary-darker: #00B8D9;
+  --ifm-color-primary-darkest: #0099B3;
+  --ifm-color-primary-light: #1ADFFF;
+  --ifm-color-primary-lighter: #33E3FF;
+  --ifm-color-primary-lightest: #66EBFF;
+
+  /* Accent colors */
+  --accent-purple: #7C3AED;
+  --accent-pink: #EC4899;
+  --accent-cyan: #00D9FF;
+
+  /* Background */
+  --ifm-background-color: #0A0A1A;
+  --ifm-background-surface-color: #12122A;
+
+  /* Glow effects */
+  --glow-cyan: rgba(0, 217, 255, 0.4);
+  --glow-purple: rgba(124, 58, 237, 0.4);
+
+  /* Code */
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 217, 255, 0.15);
+
+  /* Typography */
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --ifm-heading-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Dark mode - same as light for this futuristic theme */
+[data-theme='dark'] {
+  --ifm-color-primary: #00D9FF;
+  --ifm-color-primary-dark: #00C4E6;
+  --ifm-color-primary-darker: #00B8D9;
+  --ifm-color-primary-darkest: #0099B3;
+  --ifm-color-primary-light: #1ADFFF;
+  --ifm-color-primary-lighter: #33E3FF;
+  --ifm-color-primary-lightest: #66EBFF;
+  --ifm-background-color: #0A0A1A;
+  --ifm-background-surface-color: #12122A;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 217, 255, 0.2);
+}
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px var(--glow-cyan), 0 0 40px var(--glow-purple);
+    opacity: 1;
+  }
+
+  50% {
+    box-shadow: 0 0 30px var(--glow-cyan), 0 0 60px var(--glow-purple);
+    opacity: 0.9;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: linear-gradient(135deg, #0A0A1A 0%, #12122A 50%, #0A0A1A 100%);
+  min-height: 100vh;
+}
+
+/* Navbar styling */
+.navbar {
+  background: rgba(10, 10, 26, 0.9) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+}
+
+.navbar__title {
+  color: #00D9FF !important;
+  font-weight: 700;
+}
+
+.navbar__link {
+  color: rgba(255, 255, 255, 0.8) !important;
+  transition: all 0.3s ease;
+}
+
+.navbar__link:hover {
+  color: #00D9FF !important;
+  text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+}
+
+/* Footer */
+.footer {
+  background: linear-gradient(180deg, #0A0A1A 0%, #050510 100%) !important;
+  border-top: 1px solid rgba(0, 217, 255, 0.2);
+}
+
+.footer__title {
+  color: #00D9FF !important;
+}
+
+.footer__link-item {
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.3s ease;
+}
+
+.footer__link-item:hover {
+  color: #00D9FF !important;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, #0A0A1A 0%, #1a1a3a 50%, #0A0A1A 100%);
+  overflow: hidden;
+  padding: 6rem 0 !important;
+}
+
+/* Animated background grid */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(0, 217, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 217, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gradient-shift 20s ease infinite;
+}
+
+/* Scan line effect */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00D9FF, transparent);
+  animation: scan-line 8s linear infinite;
+  opacity: 0.3;
+}
+
+.hero__title {
+  font-size: 3.5rem !important;
+  font-weight: 800 !important;
+  background: linear-gradient(135deg, #00D9FF 0%, #7C3AED 50%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 1s ease-out;
+  text-shadow: none;
+  position: relative;
+  z-index: 1;
+}
+
+.hero__subtitle {
+  font-size: 1.5rem !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  animation: fadeInUp 1s ease-out 0.2s both;
+  position: relative;
+  z-index: 1;
+}
+
+/* CTA Button */
+.hero .button {
+  background: linear-gradient(135deg, #00D9FF 0%, #7C3AED 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 1rem 2rem !important;
+  font-size: 1.1rem !important;
+  border-radius: 50px !important;
+  animation: fadeInUp 1s ease-out 0.4s both, pulse-glow 3s ease-in-out infinite;
+  transition: all 0.3s ease !important;
+  position: relative;
+  z-index: 1;
+}
+
+.hero .button:hover {
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 10px 40px rgba(0, 217, 255, 0.4), 0 0 60px rgba(124, 58, 237, 0.3) !important;
+}
+
+/* ============================================
+   FEATURE CARDS - GLASSMORPHISM
+   ============================================ */
+.features {
+  background: transparent;
+  padding: 4rem 0;
+}
+
+.features .col {
+  animation: fadeInUp 0.8s ease-out both;
+}
+
+.features .col:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.features .col:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.features .col:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Glassmorphism card effect */
+.features .text--center {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  margin: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.features .text--center:hover {
+  transform: translateY(-10px);
+  border-color: rgba(0, 217, 255, 0.5);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 30px rgba(0, 217, 255, 0.2),
+    inset 0 0 30px rgba(0, 217, 255, 0.05);
+}
+
+.features h3 {
+  color: #00D9FF !important;
+  font-weight: 700;
+  margin-top: 1rem;
+}
+
+.features p {
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+/* Feature icons */
+.featureSvg {
+  height: 120px;
+  width: auto;
+  filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.3));
+  animation: float 4s ease-in-out infinite;
+}
+
+.features .col:nth-child(2) .featureSvg {
+  animation-delay: 0.5s;
+}
+
+.features .col:nth-child(3) .featureSvg {
+  animation-delay: 1s;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A1A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00D9FF, #7C3AED);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #33E3FF, #9F67FF);
+}
+
+/* ============================================
+   LINKS AND SELECTIONS
+   ============================================ */
+a {
+  transition: all 0.3s ease;
+}
+
+::selection {
+  background: rgba(0, 217, 255, 0.3);
+  color: white;
+}
+
+/* ============================================
+   SIDEBAR (for docs)
+   ============================================ */
+.menu {
+  background: rgba(10, 10, 26, 0.8);
+}
+
+.menu__link {
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+}
+
+.menu__link:hover {
+  color: #00D9FF;
+  background: rgba(0, 217, 255, 0.1);
+}
+
+.menu__link--active {
+  color: #00D9FF !important;
+  background: rgba(0, 217, 255, 0.15) !important;
+  border-left: 3px solid #00D9FF;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+@media (max-width: 768px) {
+  .hero__title {
+    font-size: 2.5rem !important;
+  }
+
+  .hero__subtitle {
+    font-size: 1.2rem !important;
+  }
+
+  .features .text--center {
+    margin: 0.5rem;
+    padding: 1.5rem;
+  }
+}
