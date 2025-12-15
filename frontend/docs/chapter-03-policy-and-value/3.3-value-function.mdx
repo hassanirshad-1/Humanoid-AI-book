@@ -1,0 +1,188 @@
+---
+sidebar_position: 3
+title: "Lesson 3.3: The Value Function: The Robot's Map"
+sidebar_label: "3.3 Value Function"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ValueHeatmapCode from '!!raw-loader!./code/lesson_3_3_value_heatmap.py';
+
+# Lesson 3.3: The Value Function: The Robot's Map
+
+In this lesson, you will learn about **value functions**, the "scorecards" that tell a robot how good it is to be in a particular state or to take a particular action. You will understand the difference between state-value and action-value functions, grasp the intuition behind the Bellman equation, and visualize value as a heatmap.
+
+---
+
+## The Concrete Hook: The Treasure Map
+
+Imagine you are searching for buried treasure on an island. You have two types of maps:
+
+**Map A (State-Value: "How close am I?")**: Every spot on the island is labeled with a number indicating "expected gold value from here." Spots near the treasure have high numbers. Dead ends and swamps have low numbers. You can use this map to walk "uphill" towards the treasure.
+
+**Map B (Action-Value: "Which way should I go?")**: At every spot, each possible direction (North, South, East, West) is labeled with a number indicating "expected gold value if I go this way." This map tells you not just where you are, but which *action* is best from here.
+
+In Reinforcement Learning, **Map A** is the **State-Value Function ($V(s)$)**, and **Map B** is the **Action-Value Function ($Q(s, a)$)**. Together, they form the robot's internal "treasure map" for decision-making.
+
+---
+
+## The Intuition: The Scorecard for Every Situation
+
+A value function answers the question: "How good is this situation?"
+
+*   **State-Value ($V(s)$)**: "If I'm in state $s$ and I follow my current policy, what's the expected total return I'll get?"
+*   **Action-Value ($Q(s, a)$)**: "If I'm in state $s$, I take action $a$, and then follow my policy, what's the expected total return?"
+
+The key insight: **value is about the *future*, not the present.** A state might have a low immediate reward but high value because it leads to good states. A state might have a high immediate reward but low value because it leads to a dead end.
+
+Think of a chess position. A pawn sacrifice might give your opponent material (negative immediate reward), but if it leads to checkmate (massive future reward), the position has high value.
+
+---
+
+## The Formalism: V(s) and Q(s, a)
+
+### State-Value Function
+
+The state-value function for a policy $\pi$ is defined as:
+
+$$
+V^\pi(s) = \mathbb{E}_\pi \left[ G_t \mid S_t = s \right]
+$$
+
+In words: "The expected return starting from state $s$ and following policy $\pi$."
+
+The expectation $\mathbb{E}_\pi$ averages over:
+1.  The stochasticity of the policy (if $\pi$ is stochastic).
+2.  The randomness of state transitions (if the environment is stochastic).
+
+### Action-Value Function
+
+The action-value function for a policy $\pi$ is defined as:
+
+$$
+Q^\pi(s, a) = \mathbb{E}_\pi \left[ G_t \mid S_t = s, A_t = a \right]
+$$
+
+In words: "The expected return starting from state $s$, taking action $a$, and then following policy $\pi$."
+
+### Relationship Between V and Q
+
+For a given policy $\pi$:
+
+$$
+V^\pi(s) = \sum_{a \in A} \pi(a|s) \cdot Q^\pi(s, a)
+$$
+
+The state-value is the weighted average of action-values, where the weights are the probabilities of taking each action under the policy.
+
+---
+
+## The Bellman Equation: The Recursive Definition
+
+The magic of value functions is that they satisfy a **recursive relationship** known as the **Bellman Equation**.
+
+### Bellman Equation for $V^\pi$
+
+$$
+V^\pi(s) = \sum_{a} \pi(a|s) \sum_{s', r} p(s', r | s, a) \left[ r + \gamma V^\pi(s') \right]
+$$
+
+This looks intimidating, but the intuition is simple:
+
+> **"The value of a state equals the expected immediate reward plus the discounted value of the next state."**
+
+Or even simpler:
+
+$$
+V(s) = \mathbb{E}\left[ R + \gamma V(s') \right]
+$$
+
+This recursive structure is the foundation of algorithms like **Dynamic Programming**, **TD Learning**, and **Q-Learning** (which we will cover in Chapter 4).
+
+### Bellman Equation for $Q^\pi$
+
+$$
+Q^\pi(s, a) = \sum_{s', r} p(s', r | s, a) \left[ r + \gamma \sum_{a'} \pi(a'|s') Q^\pi(s', a') \right]
+$$
+
+Again, the intuition: the Q-value of taking action $a$ in state $s$ is the expected reward plus the discounted Q-value of the next state-action pair.
+
+---
+
+## The Code: Visualizing a Value Heatmap
+
+Let's create a simple visualization of a value function on a 2D grid. This represents a robot navigating a world where some states are good (near the goal) and some are bad (obstacles or penalties).
+
+<CodeBlock language="python" title="lesson_3_3_value_heatmap.py">
+  {ValueHeatmapCode}
+</CodeBlock>
+
+### Breaking Down the Code
+
+1.  **Grid World**: We create a simple 5x5 grid where the bottom-right corner is the goal (high value) and the center has an obstacle (low value).
+
+2.  **Value Iteration**: We use a simple algorithm to propagate value backwards from the goal. States closer to the goal get higher values. States blocked by obstacles get lower values.
+
+3.  **Heatmap Visualization**: We use Matplotlib to display the value function as a color-coded grid. Darker colors indicate higher values (closer to the goal).
+
+---
+
+## The Simulation: Interpreting the Heatmap
+
+When you run the code, you'll see a heatmap like this:
+
+*   **Goal State (5, 5)**: Brightest/darkest color, highest value.
+*   **States Near Goal**: High values, forming a gradient.
+*   **Obstacle States**: Low or zero value (the robot should avoid these).
+*   **Far Corners**: Lower values, as they are many steps away from the goal.
+
+A robot using this value function as its "map" would always move towards darker (higher-value) cells, naturally finding a path to the goal while avoiding obstacles.
+
+---
+
+## The Reality Check (Sim-to-Real): Learning vs. Computing Value
+
+In our code example, we **computed** the value function using Dynamic Programming, which requires full knowledge of the environment (transitions, rewards). This is rarely available in the real world.
+
+| Simulation (DP) | Reality (RL) |
+| :-------------- | :----------- |
+| Known transition probabilities $p(s', r \mid s, a)$ | Unknown; must be learned from experience |
+| Can compute exact values | Must estimate values from samples |
+| Small, discrete state spaces | Continuous, high-dimensional states |
+| One-time computation | Continuous learning and updating |
+
+In real robotics, we don't have a perfect model of physics. Instead, the robot must **learn** the value function by interacting with the environment and observing rewards. This is the core of Reinforcement Learning algorithms like TD(0), SARSA, and DQN, which we will cover in Chapter 4.
+
+---
+
+## Knowledge Check ✓
+
+1.  **Question 1**: What is the key difference between the state-value function $V(s)$ and the action-value function $Q(s, a)$?
+    a) $V(s)$ is for continuous spaces, $Q(s,a)$ is for discrete spaces.
+    b) $V(s)$ measures value of being in a state; $Q(s,a)$ measures value of being in a state AND taking a specific action.
+    c) They are the same thing with different notation.
+    d) $Q(s,a)$ does not depend on the policy.
+
+2.  **Question 2**: In the Bellman equation, what does the term $\gamma V(s')$ represent?
+    a) The immediate reward.
+    b) The discounted value of the next state.
+    c) The probability of transitioning to $s'$.
+    d) The action taken.
+
+3.  **Question 3**: Explain why a state with zero immediate reward could still have a high value.
+
+---
+
+## Try This
+
+**Modify the Grid World**:
+1.  Add more obstacles to the grid. How does the value function change?
+2.  Add a second goal with a smaller reward. Does the heatmap show two "peaks"?
+3.  Change the discount factor $\gamma$ in the value iteration. With $\gamma = 0.5$, how does the value gradient change compared to $\gamma = 0.99$?
+
+---
+
+## Further Reading
+
+-   Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press. (Chapter 3: The Reinforcement Learning Problem - Section 3.5 on Value Functions, and Chapter 4: Dynamic Programming).
+-   Bellman, R. (1957). *Dynamic Programming*. Princeton University Press. (The original source for the Bellman equation).
+-   Silver, D. (2015). *Lecture 3: Planning by Dynamic Programming*. UCL RL Course. (Excellent visual explanations of value iteration).
