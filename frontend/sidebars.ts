@@ -31,6 +31,15 @@ const sidebars: SidebarsConfig = {
         'chapter-01-intro/1.4-first-policy',
       ],
     },
+    {
+      type: 'category',
+      label: 'Chapter 3: The Robot\'s Brain: Policies & Value Functions',
+      items: [
+        'chapter-03-policy-and-value/3.1-policy',
+        'chapter-03-policy-and-value/3.2-return',
+        'chapter-03-policy-and-value/3.3-value-function',
+      ],
+    },
   ],
 };
 
