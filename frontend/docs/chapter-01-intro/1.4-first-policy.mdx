@@ -1,0 +1,415 @@
+# Lesson 1.4: Your First Policy
+
+Congratulations! You've made it to the most exciting lesson in this chapter. You're about to write code that makes a robot move. It won't be graceful—in fact, it will be chaotic—but it's the foundation for everything that follows.
+
+---
+
+## The Concrete Hook: Making It Move
+
+You have a robot loaded in simulation. It's standing there, motionless, probably about to fall over due to gravity. Now it's time to give it a brain.
+
+In this lesson, you will:
+1. Understand the "action loop" that powers all robot control
+2. Write a simple policy that sends random commands
+3. Watch the robot flail and fall (on purpose!)
+4. Understand why random policies fail and learning is necessary
+
+By the end, you'll have implemented the core control loop used in every robotics system, from toy robots to industrial manipulators to humanoid androids.
+
+---
+
+## The Intuition: The Action Loop
+
+Recall from Lesson 1.1 that a policy `π(a|s)` is a function that takes state and outputs action. But how do we actually use this in a running robot?
+
+The answer is the **action loop**, also called the **sense-plan-act cycle**. It's the heartbeat of every robot:
+
+```
+┌─────────────────────────────────┐
+│                                 │
+│  ┌─────────┐      ┌─────────┐  │
+│  │  SENSE  │ ──→  │  PLAN   │  │
+│  │(sensors)│      │(policy) │  │
+│  └─────────┘      └─────────┘  │
+│       ↑                │       │
+│       │                ↓       │
+│       │          ┌─────────┐  │
+│       └───────── │   ACT   │  │
+│                  │(motors) │  │
+│                  └─────────┘  │
+│                                 │
+└─────────────────────────────────┘
+```
+
+### Step 1: SENSE
+
+Read the current state from the robot's sensors:
+- Joint angles and velocities from encoders
+- Orientation and acceleration from the IMU
+- Contact forces from foot sensors
+
+### Step 2: PLAN
+
+Feed this state into the policy and compute an action:
+- Run the neural network (or any control algorithm)
+- Output the desired motor commands
+
+### Step 3: ACT
+
+Send the action to the motors:
+- The physics engine applies the commanded torques
+- The robot moves
+- The world changes
+
+### Step 4: REPEAT
+
+Go back to step 1. This happens 100-1000 times per second, continuously, for as long as the robot is running.
+
+---
+
+## The Analogy: Reflexes and Habits
+
+Consider a simple human reflex: touching a hot stove.
+
+1. **Sense**: Your skin's heat receptors detect dangerously high temperature
+2. **Plan**: Your spinal cord (not even your brain!) computes a response
+3. **Act**: Your arm muscles contract to pull your hand away
+
+This entire loop happens in about 50 milliseconds—faster than conscious thought.
+
+Now think about a more complex skill like riding a bicycle:
+
+1. **Sense**: Your inner ear detects tilting; your eyes see the road
+2. **Plan**: Your cerebellum computes tiny corrections (learned over years)
+3. **Act**: Your muscles adjust the handlebar angle and your body weight
+
+These are learned policies running in your nervous system. The "training data" was all those times you fell off the bike as a child. Each fall provided feedback that updated your internal policy.
+
+For our robot, the action loop is identical. We're building an artificial sense-plan-act cycle, and in later chapters, we'll train the "plan" step using machine learning.
+
+---
+
+## The Code: Random Policy in Action
+
+Let's implement this! We'll start with the simplest possible policy: one that ignores the state entirely and outputs random actions.
+
+### The Complete Script
+
+Save this as `action_loop.py`:
+
+```python
+"""
+Lesson 1.4: Your First Policy
+A random policy that makes the robot flail around.
+This demonstrates the action loop structure we'll use throughout the book.
+"""
+
+import mujoco
+import mujoco.viewer
+import numpy as np
+import time
+import os
+
+
+def random_policy(model, data):
+    """
+    The simplest possible policy: random actions.
+    
+    Args:
+        model: MuJoCo model (contains robot structure)
+        data: MuJoCo data (contains current state)
+    
+    Returns:
+        action: numpy array of shape (model.nu,) with values in [-1, 1]
+    """
+    # model.nu = number of actuators (motors)
+    action = np.random.uniform(low=-1.0, high=1.0, size=model.nu)
+    return action
+
+
+def get_state(model, data):
+    """
+    Extract the state vector from MuJoCo data.
+    
+    Returns a dictionary with all the information a policy might need.
+    """
+    return {
+        'joint_positions': data.qpos.copy(),      # All joint angles
+        'joint_velocities': data.qvel.copy(),     # All joint velocities
+        'time': data.time,                         # Simulation time
+        'center_of_mass': data.subtree_com[0].copy(),  # CoM position
+    }
+
+
+def main():
+    # --- Setup ---
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(script_dir, "unitree_g1.xml")
+    
+    print("="*50)
+    print("Lesson 1.4: Your First Policy")
+    print("="*50)
+    
+    # Load model
+    try:
+        model = mujoco.MjModel.from_xml_path(model_path)
+        data = mujoco.MjData(model)
+        print(f"✓ Model loaded: {model.nu} actuators, {model.nq} DOF")
+    except Exception as e:
+        print(f"✗ Error: {e}")
+        return
+    
+    # --- Statistics tracking ---
+    step_count = 0
+    total_reward = 0.0
+    episode_start_time = time.time()
+    
+    # --- Main loop ---
+    with mujoco.viewer.launch_passive(model, data) as viewer:
+        viewer.cam.azimuth = 90
+        viewer.cam.elevation = -15
+        viewer.cam.distance = 3.0
+        viewer.cam.lookat[:] = [0.0, 0.0, 0.75]
+        
+        print("\nSimulation running with RANDOM POLICY")
+        print("The robot will flail and fall - this is expected!")
+        print("Press Ctrl+C or close window to stop.\n")
+        
+        try:
+            while viewer.is_running():
+                step_start = time.time()
+                
+                # ═══════════════════════════════════════════════
+                # THE ACTION LOOP - This is the core of all robotics!
+                # ═══════════════════════════════════════════════
+                
+                # 1. SENSE: Get current state
+                state = get_state(model, data)
+                
+                # 2. PLAN: Compute action from policy
+                action = random_policy(model, data)
+                
+                # 3. ACT: Apply action to motors
+                data.ctrl[:] = action
+                
+                # 4. STEP: Advance physics simulation
+                mujoco.mj_step(model, data)
+                
+                # ═══════════════════════════════════════════════
+                
+                # --- Compute reward (for monitoring) ---
+                height = state['center_of_mass'][2]
+                reward = height  # Simple reward: higher is better
+                total_reward += reward
+                step_count += 1
+                
+                # Print stats every 500 steps (~1 second at 500Hz)
+                if step_count % 500 == 0:
+                    avg_reward = total_reward / step_count
+                    elapsed = time.time() - episode_start_time
+                    print(f"Step {step_count:5d} | "
+                          f"Height: {height:.3f}m | "
+                          f"Avg Reward: {avg_reward:.3f} | "
+                          f"Time: {elapsed:.1f}s")
+                
+                # Update viewer
+                viewer.sync()
+                
+                # Sleep to maintain real-time
+                time_to_sleep = model.opt.timestep - (time.time() - step_start)
+                if time_to_sleep > 0:
+                    time.sleep(time_to_sleep)
+                    
+        except KeyboardInterrupt:
+            print("\n\nSimulation stopped by user.")
+        
+        print(f"\nFinal Statistics:")
+        print(f"  Total steps: {step_count}")
+        print(f"  Total reward: {total_reward:.2f}")
+        print(f"  Average reward: {total_reward/max(step_count, 1):.4f}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+### Running the Script
+
+```bash
+python action_loop.py
+```
+
+Watch the robot! It will:
+- Jerk around randomly
+- Probably fall over almost immediately  
+- Maybe do some accidental flips
+- Definitely not walk
+
+**This is expected and correct!** A random policy knows nothing about physics, balance, or locomotion. It's just sending noise to the motors.
+
+---
+
+## Understanding Why Random Fails
+
+Let's think about why random actions don't work:
+
+### The Probability Problem
+
+For a 4-DOF robot with continuous actions, the action space is 4-dimensional. To stand upright, the robot needs to output a very specific combination of torques—maybe something like `[0.1, -0.2, 0.15, -0.18]`.
+
+What's the probability that random sampling produces exactly that? Essentially zero.
+
+For a 23-DOF robot, it's even worse. Randomly sampling the correct action is like trying to guess a 23-digit password.
+
+### The Temporal Problem
+
+Even if you accidentally hit the right action for one timestep, you need to hit the right action for the *next* timestep too. And the next. And the next.
+
+Walking requires coordinated sequences of hundreds of actions. The probability of randomly generating a valid walking sequence is astronomically small.
+
+```python
+# Rough calculation
+action_space_volume = 2 ** 23  # Each dimension from -1 to 1
+steps_to_walk_one_step = 100
+probability_of_random_walk = (1 / action_space_volume) ** steps_to_walk_one_step
+# = basically 0
+```
+
+### The Solution: Learning
+
+This is why we need **reinforcement learning**. Instead of random sampling, we:
+
+1. Try random actions initially
+2. See which ones lead to reward (staying upright, moving forward)
+3. Gradually adjust the policy to output more rewarding actions
+4. After millions of trials, the policy learns what works
+
+We'll implement this learning process starting in Chapter 3.
+
+---
+
+## Extending the Random Policy
+
+Before we move on, let's try a few modifications to develop intuition:
+
+### Experiment 1: Zero Policy
+
+What happens if we send zero torque to all motors?
+
+```python
+def zero_policy(model, data):
+    """Do nothing - let gravity take over."""
+    return np.zeros(model.nu)
+```
+
+Try it! The robot will collapse immediately because there's no force countering gravity.
+
+### Experiment 2: Constant Policy
+
+What about fixed, non-zero actions?
+
+```python
+def constant_policy(model, data):
+    """Send the same action every time."""
+    return np.array([0.5, -0.5, 0.5, -0.5])  # Arbitrary constant
+```
+
+The robot will move in a consistent (but probably wrong) way. It might tip over slowly instead of instantly.
+
+### Experiment 3: Sine Wave Policy
+
+What about smooth, cyclic actions?
+
+```python
+def sine_policy(model, data):
+    """Actions vary smoothly over time."""
+    t = data.time
+    return np.array([
+        np.sin(2 * t),
+        np.sin(2 * t + np.pi/2),
+        np.sin(2 * t + np.pi),
+        np.sin(2 * t + 3*np.pi/2),
+    ])
+```
+
+This produces rhythmic, alternating movements. It's still not walking, but it's more structured than random noise.
+
+---
+
+## The Bigger Picture
+
+What you've built today is more significant than it might seem. This action loop—sense, plan, act, repeat—is the foundation of:
+
+- **Industrial robots** in factories
+- **Self-driving cars** on the road
+- **Drones** in the sky
+- **Surgical robots** in operating rooms
+- **Humanoid robots** in research labs
+
+The only difference is what goes in the "plan" step. In this lesson, it was random noise. In real systems, it's sophisticated algorithms trained on millions of examples.
+
+Over the next chapters, we'll replace `random_policy()` with increasingly intelligent alternatives until we have a robot that can actually walk.
+
+---
+
+## Knowledge Check ✓
+
+Before moving to Chapter 2, make sure you can answer:
+
+1. **What are the three steps** of the action loop?
+2. **Why can't random policies** learn to walk?
+3. **What is `model.nu`** in MuJoCo?
+4. **What would happen** if we removed the `time.sleep()` call?
+
+---
+
+## Try This: Challenges
+
+1. **Modify the reward function**: Change it from height-based to velocity-based. How does this affect what the robot "tries" to do?
+
+2. **Add action smoothing**: Currently, actions change completely every timestep. Try averaging with the previous action:
+   ```python
+   action = 0.9 * previous_action + 0.1 * random_policy(model, data)
+   ```
+   Does the robot move more smoothly?
+
+3. **Track falling**: Add code to detect when the robot has fallen (height < 0.3m). Count how many steps it takes to fall with different policies.
+
+---
+
+## Summary
+
+In this chapter, you learned:
+
+| Lesson | Key Concept |
+|--------|-------------|
+| 1.1 | Policy `π(a\|s)` maps state to action; MDP formalism |
+| 1.2 | Robots have actuators, sensors, and compute; DOF and state vectors |
+| 1.3 | MuJoCo setup; loading models and running simulations |
+| 1.4 | The action loop (sense-plan-act); why learning is needed |
+
+You now have a working simulation environment and understand the fundamental concepts of robot control. Most importantly, you've seen firsthand why we need machine learning—random policies simply cannot produce intelligent behavior.
+
+In the next chapter, we'll introduce **reward shaping** and **policy gradients**—the tools that let robots learn from experience.
+
+---
+
+## What's Next?
+
+**Chapter 2: Reward Design** will teach you how to define what "good behavior" means mathematically. You'll learn that the reward function is just as important as the learning algorithm—maybe more so.
+
+**→ Continue to [Chapter 2: The Reward Signal](../chapter-02-reward/2.1-reward-basics.mdx)**
+
+---
+
+## Chapter 1 Exercises (Optional)
+
+If you want extra practice before moving on:
+
+1. **Full State Logger**: Modify `action_loop.py` to save the complete state trajectory to a CSV file. Plot joint angles over time using matplotlib.
+
+2. **Policy Zoo**: Implement 5 different deterministic policies (zero, constant, sine, sawtooth, etc.) and compare how long each takes to fall.
+
+3. **Model Surgery**: Modify the MJCF file to add an arm to the robot. How does this change `model.nu` and `model.nq`?
+
+4. **Real-Time Visualization**: Add a matplotlib plot that updates in real-time, showing the robot's height over the last 100 timesteps.

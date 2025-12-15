@@ -3,6 +3,7 @@
 
 [CmdletBinding()]
 param(
+    [string]$FeatureName,
     [switch]$Json,
     [switch]$Help
 )
@@ -21,7 +22,7 @@ if ($Help) {
 . "$PSScriptRoot/common.ps1"
 
 # Get all paths and variables from common functions
-$paths = Get-FeaturePathsEnv
+$paths = Get-FeaturePathsEnv -FeatureName $FeatureName
 
 # Check if we're on a proper feature branch (only for git repos)
 if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -HasGit $paths.HAS_GIT)) { 

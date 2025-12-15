@@ -1,0 +1,20 @@
+<mujoco model="unitree_g1_simplified">
+    <option timestep="0.002"/>
+    <worldbody>
+        <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+        <geom type="plane" size="1 1 0.1" rgba=".9 0.9 0.9 1"/>
+        <!-- A simplified 'leg' to demonstrate control -->
+        <body pos="0 0 1">
+            <joint name="hip" type="hinge" axis="0 1 0" range="-45 45"/>
+            <geom type="capsule" fromto="0 0 0 0 0 -0.5" size="0.05" rgba="0 .9 0 1"/>
+            <body pos="0 0 -0.5">
+                <joint name="knee" type="hinge" axis="0 1 0" range="-90 0"/>
+                <geom type="capsule" fromto="0 0 0 0 0 -0.5" size="0.04" rgba="0 0 .9 1"/>
+            </body>
+        </body>
+    </worldbody>
+    <actuator>
+        <motor joint="hip" gear="100" name="hip_motor"/>
+        <motor joint="knee" gear="100" name="knee_motor"/>
+    </actuator>
+</mujoco>
