@@ -1,0 +1,205 @@
+---
+
+title: "Lesson 2.2: Your First Reward: Implementing a Survival Bonus"
+sidebar_label: "2.2 Your First Reward"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import SurvivalRewardCode from '!!raw-loader!./code/lesson_2_2_survival_reward.py';
+
+# Lesson 2.2: Your First Reward: Implementing a Survival Bonus
+
+In this lesson, you will move from theory to practice by implementing your very first reward function for a humanoid robot in a MuJoCo simulation. You will learn how to define a simple "survival bonus" that encourages the robot to stay upright, integrate this reward into a simulation loop, and understand the practical challenges of translating such a reward from simulation to a real robot.
+
+---
+
+## The Concrete Hook: The First Rule of Robotics - Don't Fall Down
+
+For any bipedal or quadrupedal robot, the most fundamental skill is maintaining balance. A robot that constantly falls cannot perform any useful tasks. Whether it's a disaster-relief robot navigating rubble or a service robot carrying objects, staying upright is paramount. Our first reward function will directly address this most basic necessity: incentivizing the robot to **not fall over**.
+
+![Fallen robot vs upright robot](https://www.industrialrobotics.com/wp-content/uploads/2021/04/robot-falling.jpg)
+_Figure 2.2.1: A robot struggling with balance (left) versus one maintaining stability (right). Our first reward aims to encourage the latter._
+
+---
+
+
+## The Intuition: The Perpetual "Stay Upright" Game
+
+Imagine a toddler learning to walk. Every moment they stand or take a step without falling, they experience a natural "reward" – perhaps the joy of mobility or the praise of a parent. The moment they fall, the "reward" is a bump and a temporary halt to their progress. Over time, the toddler learns to associate certain muscle movements and balance adjustments with staying upright, eventually mastering walking.
+
+For our robot, we'll create a similar, albeit simpler, game. At every step of the simulation, the robot will receive a small positive numerical reward for remaining upright. If it falls, this positive reward stops (or a penalty is issued). The robot, through trial and error, will learn to prioritize actions that keep it from falling, thus maximizing its cumulative survival bonus. This constant, immediate feedback makes "staying upright" the robot's primary, implicit goal.
+
+### Defining "Fallen" for a Robot
+
+How do we quantitatively define "fallen" for a robot in a simulation? We need measurable criteria from the robot's state. Two key indicators are:
+1.  **Torso Orientation**: How much is the robot's main body (torso) tilted from the vertical axis? If it's too horizontal, it's likely fallen.
+2.  **Torso Height**: Is the robot's center of mass (specifically its torso) too close to the ground? A very low torso height suggests it's no longer standing.
+
+By combining these two checks, we create a robust definition of what it means for our simulated robot to be "fallen."
+
+---
+
+
+## The Formalism: A Threshold-Based Instantaneous Reward
+
+Our survival bonus can be formalized as an instantaneous reward function $r(s_t)$ that depends only on the current state $s_t$. The function evaluates to a constant positive value if the robot is upright, and zero (or a negative penalty) otherwise.
+
+Let $U(s_t)$ be a boolean predicate that is true if the robot is upright in state $s_t$ and false if it has fallen. Our reward function $r(s_t)$ can be defined as:
+
+$$
+r(s_t) = \begin{cases}
++C & \text{if } U(s_t) \text{ is true (robot is upright)} \\ 
+0 \text{ or } -P & \text{if } U(s_t) \text{ is false (robot has fallen)}
+\end{cases}
+$$
+
+Where:
+*   $C$ is a positive constant (e.g., 1.0) representing the survival bonus.
+*   $P$ is a positive constant representing a penalty, if we choose to include one. For simplicity, we often use 0 when fallen, implying no further reward can be gained.
+
+The predicate $U(s_t)$ itself can be broken down into two conditions:
+1.  **Orientation Check**: The $z$-axis component of the torso's orientation matrix (which indicates alignment with the global up-vector) is above a certain threshold (e.g., 0.8). Let this be $O(s_t)$.
+2.  **Height Check**: The $z$-coordinate of the torso's center of mass is above a certain minimum height (e.g., 0.3 meters). Let this be $H(s_t)$.
+
+Thus, $U(s_t) = O(s_t) \land H(s_t)$, meaning the robot is upright only if *both* its orientation is sufficiently vertical *and* its height is above a minimum threshold.
+
+---
+
+
+## The Code: Implementing `calculate_reward`
+
+We will now implement this logic in Python. The code below defines an `is_fallen` helper function and our main `calculate_reward` function, which you can integrate into your MuJoCo simulation loop from Chapter 1.
+
+<CodeBlock language="python" title="lesson_2_2_survival_reward.py">
+  {SurvivalRewardCode}
+</CodeBlock>
+
+### Breaking Down the Code
+
+1.  **`is_fallen(d)`**:
+    -   This helper function assesses the robot's upright status using the MuJoCo data structure `d`.
+    -   `d.xmat['torso', 'zz']` provides the $z$-component of the torso's $z$-axis in world coordinates. A value of `1.0` signifies perfect vertical alignment, `0.0` means horizontal, and `-1.0` is inverted. We check if this value is below `0.8`, indicating a significant tilt.
+    -   `d.qpos[2]` gives the $z$-coordinate of the torso's center of mass. We check if this is below `0.3` meters, suggesting the robot is too low to be considered standing.
+    -   The robot is deemed "fallen" if *either* its tilt exceeds the limit *or* its height drops too low. This logical OR (`or`) ensures that if one critical condition is met, the robot is considered fallen.
+
+2.  **`calculate_reward(d)`**:
+    -   This is our core reward function.
+    -   It calls `is_fallen(d)`. If `True`, the reward is `0.0` (no survival bonus).
+    -   If `is_fallen(d)` is `False` (robot is upright), the reward is `1.0` (our positive survival bonus).
+
+### Integrating into the Simulation Loop
+
+To use this reward function, you would call it at each simulation step and accumulate the rewards. Here's how it fits into a typical MuJoCo `mj_step` loop:
+
+```python
+import mujoco
+import mujoco.viewer
+import numpy as np
+import time
+
+# Load the model (e.g., your robot model from Chapter 1)
+# m = mujoco.MjModel.from_xml_path("path/to/your/robot.xml")
+# d = mujoco.MjData(m)
+
+# Initialize cumulative reward
+cumulative_reward = 0.0
+# Define the maximum simulation time to prevent infinite loops for demonstration
+max_sim_time = 10.0 # seconds
+dt = m.opt.timestep # simulation timestep
+
+with mujoco.viewer.launch_passive(m, d) as viewer:
+    # Reset the simulation if needed
+    mujoco.mj_reset_data(m, d)
+
+    while viewer.is_running() and d.time < max_sim_time:
+        # Generate some random controls (replace with your policy in future lessons)
+        # Here, we use random controls to quickly demonstrate falling
+        mujoco.mj_step(m, d) # Step the simulation forward
+
+        # Calculate the reward for the current state
+        reward = calculate_reward(d)
+        cumulative_reward += reward
+
+        # Print the current state and reward
+        viewer.sync() # Update the viewer
+        time.sleep(dt) # Pause for visualization if desired
+
+        if is_fallen(d):
+            print(f"Robot has fallen at time {d.time:.2f}s. Cumulative Reward: {cumulative_reward:.2f}")
+            break # Stop simulation if fallen
+
+    print(f"Simulation ended. Total Cumulative Reward: {cumulative_reward:.2f}")
+    if d.time >= max_sim_time:
+        print("Max simulation time reached.")
+
+```
+_Code 2.2.2: Conceptual integration of the `calculate_reward` function into a MuJoCo simulation loop. Note: `m` and `d` should be loaded from your robot XML._
+
+When you run a simulation with this reward and, for instance, a random action policy (as in Chapter 1), you'll quickly observe the robot falling. The cumulative reward will increase only for the few steps the robot manages to stay upright, then it will cease to accumulate. This demonstrates that a naive policy without learning will struggle to maximize this simple survival reward.
+
+---
+
+
+## The Simulation: Observing Survival
+
+After implementing this, you can run your MuJoCo simulation. You should observe:
+1.  **Initial Reward Accumulation**: For the first few steps, as the robot struggles to balance (if using a random policy), the cumulative reward will increase (e.g., 1.0, 2.0, 3.0...). 
+2.  **Falling and Reward Stoppage**: As soon as the robot's torso tilts too far or its height drops below the threshold defined in `is_fallen`, the reward per step will drop to `0.0`. Consequently, the cumulative reward will stop increasing.
+3.  **Visual Confirmation**: You will visually see the robot collapse in the viewer, confirming that the `is_fallen` condition has been met.
+
+This immediate visual feedback in the simulation reinforces the connection between the robot's physical state, our defined conditions, and the resulting reward signal.
+
+---
+
+
+## The Reality Check (Sim-to-Real): Sensor Noise and IMU Drift
+
+In our MuJoCo simulation, the robot's state information, such as torso orientation (`d.xmat`) and height (`d.qpos[2]`), is perfectly accurate and noise-free. In the real world, this data comes from physical sensors, primarily an **Inertial Measurement Unit (IMU)** for orientation and sometimes **kinematic sensors** (like encoders on joints) for position.
+
+| Simulation Data (MuJoCo `d`) | Real-World Sensor Data Challenges |
+| :----------------------------- | :-------------------------------- |
+| Perfect rotation matrix for torso (`d.xmat`) | **IMU Noise and Drift**: Raw IMU data is noisy and accumulates integration errors over time, leading to "drift" in orientation estimates. Complex sensor fusion (e.g., Kalman filters, complementary filters) is needed. |
+| Exact joint positions/velocities (`d.qpos`, `d.qvel`) | **Encoder Noise**: Encoders can have quantization noise or slip. |
+| Precise contact information | **Contact Uncertainty**: Hard to detect precise contact points and forces, especially on soft surfaces. |
+| Instantaneous, lag-free data | **Sensor Latency**: There's always a delay between a physical event and its measurement being available. |
+| Idealized physics model | **Unmodeled Dynamics**: Factors like friction, elasticity, and mechanical backlash are never perfectly modeled, impacting how the robot behaves and thus how `is_fallen` might be triggered. |
+
+A reward function like `is_fallen` must be made robust to these real-world imperfections. For instance, using a simple threshold on raw IMU data could lead to false positives (robot is fine, but sensor noise triggers "fallen") or false negatives (robot is actually fallen, but sensor drift makes it appear upright). Techniques like filtering sensor data, using more sophisticated state estimators, or making reward thresholds more lenient are crucial for sim-to-real transfer.
+
+---
+
+
+## Knowledge Check ✓
+
+1.  **Question 1**: What is the primary incentive provided by the "survival bonus" reward function implemented in this lesson?
+    a) To make the robot walk faster.
+    b) To encourage the robot to interact with objects.
+    c) To keep the robot from falling over.
+    d) To help the robot navigate complex environments.
+
+2.  **Question 2**: In the `is_fallen` function, why is it considered more robust to check *both* the torso's orientation and its height, rather than just one of these conditions?
+    a) Because checking both is computationally cheaper.
+    b) Because it prevents false positives or negatives, capturing a truer sense of "fallen."
+    c) Because MuJoCo requires both parameters for accurate simulation.
+    d) Because it allows for more fine-grained control over the robot's movements.
+
+3.  **Question 3**: Describe at least two specific challenges introduced by real-world sensors (like IMUs) that are not present in a perfect simulation when evaluating the `is_fallen` condition.
+
+---
+
+
+## Try This
+
+**Modify the `is_fallen` Thresholds**:
+1.  **Experiment**: Change the `0.8` threshold for torso orientation (e.g., to `0.95` for stricter uprightness, or `0.5` for more leniency) and the `0.3` meter height threshold (e.g., to `0.5` or `0.1`).
+2.  **Observe**: Run the simulation with a random policy after each change. How does the cumulative reward change? Does the robot appear to "fall" at different points visually compared to when the reward function declares it fallen?
+3.  **Reflect**: What are the implications of very strict versus very lenient thresholds on a robot's learning process? How might this affect a learning agent's behavior if it were trying to maximize this reward?
+
+---
+
+
+## Further Reading
+
+-   Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press. (Chapter 3: The Reinforcement Learning Problem, and Chapter 6: Temporal-Difference Learning for the concept of return maximization).
+-   Todorov, E., Erez, T., & Tassa, Y. (2012). MuJoCo: A physics engine for model-based control. *IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)*, 5026-5033. (For details on MuJoCo state data structures).
+-   Ruiz, C., et al. (2018). IMU-based humanoid robot balance control with disturbances. *International Conference on Robotics and Automation (ICRA)*, 5605-5610. (For real-world IMU challenges in robotics).

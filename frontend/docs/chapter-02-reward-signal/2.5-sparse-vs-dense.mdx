@@ -1,0 +1,159 @@
+---
+sidebar_position: 5
+title: "Lesson 2.5: Sparse vs. Dense Rewards"
+---
+
+# Lesson 2.5: Sparse vs. Dense Rewards
+
+In this final lesson of Chapter 2, we tackle the fundamental trade-off in reward design: the conflict between **guidance** and **truth**.
+
+---
+
+## The Concrete Hook: The Maze
+
+Imagine you are dropped into a giant, complex maze blindfolded. You need to find the exit.
+
+**Scenario A**: You only get a signal when you actually solve the maze. You wander for hours, days, maybe years, hearing nothing. Finally, if you stumble out, a bell rings.
+**Scenario B**: At every single step, a guide whispers "Warmer" or "Colder" depending on whether you moved closer to the exit.
+
+Scenario A is a **Sparse Reward**. It's brutally hard, but if the bell rings, you know you succeeded.
+Scenario B is a **Dense Reward**. It's much easier to follow, but what if the "Warmer" path leads you to a dead-end right next to the exit wall? You might get stuck there, thinking you're close, while the true path required backtracking.
+
+In robotics, we constantly balance these two approaches.
+
+---
+
+## The Intuition: Teaching a Dog
+
+Think back to training a dog.
+
+*   **Sparse**: You say "Sit." The dog does nothing. It barks. It jumps. It runs in circles. You wait. 10 minutes later, it accidentally sits. You click and treat. The dog has no idea *which* of the last 100 things it did earned the treat. This is the **Credit Assignment Problem**.
+*   **Dense**: You use "shaping." First, you reward looking at the floor. Then lowering the hips slightly. Then lowering them more. You guide the behavior step-by-step.
+
+For humanoid robots, **Sparse Rewards** represent the true goal (e.g., "don't fall"), while **Dense Rewards** provide the hints needed to learn complex movements (e.g., "move feet forward," "keep torso upright").
+
+---
+
+## The Formalism: Mathematical Definitions
+
+We can define these mathematically based on the non-zero density of the reward signal $r_t$.
+
+### Sparse Reward
+A sparse reward is zero for almost all states, except for a specific subset of goal states $S_{goal}$.
+
+$$
+r_t = \begin{cases} 
+1 & \text{if } s_t \in S_{goal} \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+This is the "purest" form of specifying a task. There is no ambiguity.
+
+### Dense Reward
+A dense reward provides a non-zero signal at almost every timestep, usually proportional to progress.
+
+$$
+r_t = \text{progress}(s_t, s_{goal}) - \text{cost}(a_t)
+$$
+
+For example, measuring the negative distance to the target: $r_t = -||s_t - s_{goal}||$.
+
+---
+
+## The Code: Comparing Implementations
+
+Let's implement both for a hypothetical task: moving the robot to a target position $x=10$ meters.
+
+```python
+import numpy as np
+
+def calculate_sparse_reward(robot_x, target_x=10.0, threshold=0.5):
+    """
+    Returns 1.0 ONLY if within threshold of the target.
+    Otherwise returns 0.0.
+    """
+    distance = np.abs(robot_x - target_x)
+    if distance < threshold:
+        return 1.0  # The "Bell Rings"
+    else:
+        return 0.0  # Silence
+
+def calculate_dense_reward(robot_x, target_x=10.0):
+    """
+    Returns a value proportional to how close we are.
+    Higher (less negative) is better.
+    """
+    distance = np.abs(robot_x - target_x)
+    
+    # Simple dense reward: negative distance
+    reward = -distance
+    
+    # Normalized to be positive (0 to 1) for easier interpretation
+    # (assuming max distance is ~20m)
+    # reward = 1.0 - (distance / 20.0) 
+    
+    return reward
+```
+
+In `action_loop.py`, if we used the sparse reward, our random robot would print `Reward: 0.0` for millions of steps. With the dense reward, it would see `Reward: -10.0`, `Reward: -9.9`... providing immediate feedback on whether a jittery movement helped or hurt.
+
+---
+
+## The Simulation: The Local Optimum Trap
+
+What happens if we strictly follow dense rewards?
+
+Imagine our Unitree G1 robot is standing in front of a wall, and the target is on the other side.
+1.  **Dense Reward**: The robot walks *into* the wall and keeps pushing. Why? Because that is the physical point closest to the target. It gets stuck in a **Local Optimum**.
+2.  **Sparse Reward**: The robot wanders randomly. It eventually (after a very long time) walks *around* the wall and hits the target.
+
+In practice, we often **combine** them: use dense rewards to learn locomotion skills (walking), but sparse rewards for high-level logic (navigation).
+
+---
+
+## The Reality Check (Sim-to-Real)
+
+There is a major catch with Dense Rewards in the real world: **How do you measure them?**
+
+| Reward Type | Simulation Requirement | Real World Requirement |
+| :--- | :--- | :--- |
+| **Sparse** (Did you fall?) | IMU (Orientation) | IMU (Cheap, built-in) |
+| **Dense** (Velocity tracking) | Perfect State Knowledge | GPS / Motion Capture System |
+
+To calculate a dense "move forward" reward in Sim, we just ask the physics engine "what is my x-velocity?".
+To do it in Real Life, the robot needs to *know* its speed. If its feet are slipping on ice, its internal sensors might say "I'm running fast!" (wheels/joints spinning) while it's actually standing still.
+
+**Sim-to-Real Tip**: If your dense reward relies on information you can't measure accurately on the real robot (like exact global position), you must train a **state estimator** or use domain randomization (Chapter 4) to handle the mismatch.
+
+---
+
+## Knowledge Check ✓
+
+1.  **Question 1**: Why is the "Credit Assignment Problem" harder with sparse rewards?
+2.  **Question 2**: Which type of reward is easier to measure on a physical robot without external cameras: falling (sparse) or exact velocity (dense)?
+3.  **Question 3**: True or False: Dense rewards always lead to the optimal solution.
+
+---
+
+## Try This
+
+Modify your `action_loop.py` to print *both* rewards simultaneously.
+
+```python
+# Inside your loop
+dist = np.linalg.norm(state['position'] - target_pos)
+sparse = 1.0 if dist < 0.5 else 0.0
+dense = -dist
+
+print(f"Dist: {dist:.2f} | Sparse: {sparse} | Dense: {dense:.2f}")
+```
+
+Watch how the Dense signal fluctuates wildly with every random movement, giving information, while the Sparse signal sits dead at 0.0.
+
+---
+
+## Further Reading
+
+-   Andrychowicz, M., et al. (2017). *Hindsight Experience Replay*. NeurIPS. (A famous technique for learning from sparse rewards).
+-   Ng, A. Y., et al. (1999). *Policy invariance under reward transformations: Theory and application to reward shaping.* ICML.
