@@ -11,7 +11,7 @@ def test_load_g1_model():
     # The test file is in /tests, the model is in /docs/chapter-01-intro/code/
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     model_path = os.path.join(
-        base_dir, "docs", "chapter-01-intro", "code", "unitree_g1.xml"
+        base_dir, "frontend", "docs", "chapter-01-intro", "code", "unitree_g1.xml"
     )
 
     assert os.path.exists(model_path), f"Model file not found at {model_path}"

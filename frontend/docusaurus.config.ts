@@ -46,6 +46,8 @@ const config: Config = {
           // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/hassanirshad-1/Robotics_book/tree/main/',
+          remarkPlugins: [require('remark-math')],
+          rehypePlugins: [require('rehype-katex')],
         },
         blog: false, // Optional: disable the blog plugin
         theme: {
@@ -53,6 +55,17 @@ const config: Config = {
         },
       } satisfies Preset.Options,
     ],
+  ],
+
+  // Add Katex CSS for math rendering
+  stylesheets: [
+    {
+      href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
+      type: 'text/css',
+      integrity:
+        'sha384-AwBSykVqqu+fxQokC6bpDcprgNKSumZJtjDq3P0rSZaT//YJ+3zwt/r5T6PNNgB9',
+      crossorigin: 'anonymous',
+    },
   ],
 
   themeConfig: {

@@ -31,6 +31,26 @@ const sidebars: SidebarsConfig = {
         'chapter-01-intro/1.4-first-policy',
       ],
     },
+    {
+      type: 'category',
+      label: 'Chapter 2: The Reward Signal',
+      items: [
+        'chapter-02-reward-signal/2.1-what-is-a-reward',
+        'chapter-02-reward-signal/2.2-first-reward',
+        'chapter-02-reward-signal/2.3-reward-shaping',
+        'chapter-02-reward-signal/2.4-reward-hacking',
+        'chapter-02-reward-signal/2.5-sparse-vs-dense',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Chapter 3: The Robot\'s Brain: Policies & Value Functions',
+      items: [
+        'chapter-03-policy-and-value/3.1-policy',
+        'chapter-03-policy-and-value/3.2-return',
+        'chapter-03-policy-and-value/3.3-value-function',
+      ],
+    },
   ],
 };
 
