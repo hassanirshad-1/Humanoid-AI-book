@@ -1,0 +1,37 @@
+# Textbook Roadmap: Physical AI & Humanoid Robotics
+
+## Part 1: Foundations (The "What" and "How")
+*Establishes the mental models and software environment.*
+
+*   **Chapter 0: Prerequisites** (Python, Math, Hardware Basics)
+*   **Chapter 1: Intro to Physical AI** (Philosophy, Body, Sim Setup, First Policy) ✅ *Complete*
+*   **Chapter 2: The Reward Signal** (Defining "Good" behavior, Shaping, Curriculums)
+*   **Chapter 3: The Learning Algorithm** (PPO, Actor-Critic, RL Loop)
+
+## Part 2: The Core Skill (Locomotion)
+*Getting the robot to walk blindly in simulation.*
+
+*   **Chapter 4: Sim-to-Real Basics** (Domain Randomization, Noise, Physics modeling)
+*   **Chapter 5: Blind Locomotion** (Training a walking policy on flat ground)
+*   **Chapter 6: Robustness** (Walking on slopes, stairs, and with external pushes)
+
+## Part 3: Perception & Manipulation
+*Adding eyes and hands.*
+
+*   **Chapter 7: Perception** (Depth cameras, Elevation maps, Vision encoders)
+*   **Chapter 8: Perceptive Locomotion** (Walking over rough terrain using vision)
+*   **Chapter 9: Manipulation** (Inverse Kinematics vs. RL for reaching/grasping)
+
+## Part 4: Deployment & The "Stack" (Where ROS fits)
+*Taking the policy out of Python/MuJoCo and onto the metal.*
+
+*   **Chapter 10: The Deployment Bridge** 
+    *   *Here is where we introduce ROS2.*
+    *   Why ROS? (Message passing, hardware drivers, safety watchdog).
+    *   Exporting the Policy (ONNX/TorchScript).
+    *   The "Inference Wrapper": Running the policy at 100Hz in a ROS node.
+*   **Chapter 11: Real-World Ops** (Safety limits, Data logging, Reset mechanisms)
+
+## Part 5: The Future
+*   **Chapter 12: Transformers & Foundation Models** (The "ChatGPT for Robots" era)
+*   **Chapter 13: Continual Learning** (Learning on the job)

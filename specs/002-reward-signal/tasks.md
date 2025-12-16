@@ -36,8 +36,8 @@ This phase focuses on the lessons that are primarily text and concepts. These ta
 ## Phase 5: Verification & Polish
 
 -   [X] T012 Run the full test suite with `pytest` to ensure all new and existing tests pass.
--   [ ] T013 Start the frontend server with `npm run start` and visually inspect all five new lesson pages for correct rendering, formatting, and navigation.
--   [ ] T014 Manually verify that the code snippets from `T007` and `T010` are runnable in the context of the main simulation loop from Chapter 1.
+-   [X] T013 Start the frontend server with `npm run start` and visually inspect all five new lesson pages for correct rendering, formatting, and navigation.
+-   [X] T014 Manually verify that the code snippets from `T007` and `T010` are runnable in the context of the main simulation loop from Chapter 1.
 
 ## Dependencies & Parallel Execution
 

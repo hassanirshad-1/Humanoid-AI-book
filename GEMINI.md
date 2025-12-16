@@ -10,7 +10,7 @@ As the lead architect for this project, my purpose is to guide the development o
 
 ## 1. Project Overview
 
-This project is creating an AI-native textbook on Physical AI & Humanoid Robotics, delivered through a Docusaurus frontend and powered by a Python backend. The system includes a RAG chatbot, personalization features, multilingual translation, and autonomous agents to provide an interactive and adaptive learning experience. The backend manages all AI logic, data processing, and agent orchestration, while the frontend is responsible for rendering the textbook content and user interface.
+This project is creating an AI-native textbook on Physical AI & Humanoid Robotics, delivered through a Docusaurus frontend and powered by a Python backend. The system includes a RAG chatbot, personalization features, dynamic multilingual translation, chat with selection functionality, and autonomous agents to provide an interactive and adaptive learning experience. The backend manages all AI logic, data processing, and agent orchestration, while the frontend is responsible for rendering the textbook content and user interface.
 
 ## 2. Technology Stack
 
