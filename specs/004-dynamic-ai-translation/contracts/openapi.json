@@ -1,0 +1,123 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AI Textbook Translation API",
+    "description": "API for providing on-demand translation of content for the AI-Native Textbook.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/translate": {
+      "post": {
+        "summary": "Translate Text",
+        "description": "Receives text and a target language, and returns the translated text using the local LLM.",
+        "operationId": "translate_text_api_translate_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string",
+                      "example": "Error communicating with the translation model."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TranslationRequest": {
+        "type": "object",
+        "required": ["text", "target_language"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The source text to be translated."
+          },
+          "target_language": {
+            "type": "string",
+            "title": "Target Language",
+            "description": "The language to translate the text into (e.g., 'Urdu')."
+          }
+        }
+      },
+      "TranslationResponse": {
+        "type": "object",
+        "required": ["translated_text"],
+        "properties": {
+          "translated_text": {
+            "type": "string",
+            "title": "Translated Text"
+          }
+        }
+      },
+      "HTTPValidationError": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "properties": {
+          "loc": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "type": "string" },
+                { "type": "integer" }
+              ]
+            }
+          },
+          "msg": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      }
+    }
+  }
+}
