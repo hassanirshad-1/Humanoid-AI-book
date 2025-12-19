@@ -1,0 +1,159 @@
+---
+sidebar_position: 1
+title: "Lesson 3.1: The Policy: How Robots Make Decisions"
+sidebar_label: "Lesson 3.1: The Policy"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import PolicyComparisonCode from '!!raw-loader!./code/lesson_3_1_policy_comparison.py';
+
+# Lesson 3.1: The Policy: How Robots Make Decisions
+
+In this lesson, you will learn what a **policy** is and why it is the central concept that dictates how an autonomous robot chooses its actions. You will understand the difference between simple "reflexes" and sophisticated "strategies," and implement code that compares these approaches.
+
+---
+
+## The Concrete Hook: Reflex vs. Strategy
+
+Imagine two drivers approaching a yellow traffic light.
+
+**Driver A (The Reflex):** Sees yellow, slams the brakes. Always. It's a hard-coded rule: `IF yellow THEN brake`. Simple, predictable, but sometimes dangerous (what if a truck is tailgating?).
+
+**Driver B (The Strategy):** Considers the current speed, the distance to the intersection, and even glances in the rearview mirror. Then makes a decision: brake smoothly, or accelerate through. This is a *context-aware* decision.
+
+In robotics, Driver A follows a **deterministic, rule-based policy**. Driver B follows a more nuanced, potentially **stochastic policy** that weighs probabilities and context. This lesson is about understanding and building both.
+
+---
+
+## The Intuition: The Robot's Rulebook
+
+A **policy** is simply the robot's rulebook for behavior. It's a mapping from what the robot *perceives* (its state) to what the robot *does* (its action).
+
+Think of it like this:
+*   **State ($s$)**: "I am standing, leaning slightly forward, with my left foot in the air."
+*   **Action ($a$)**: "Apply 5 Nm of torque to my right hip motor, 2 Nm to my left ankle..."
+
+The policy is the function that connects these two. It answers the question: *"Given where I am, what should I do?"*
+
+### Deterministic vs. Stochastic Policies
+
+There are two main types of policies:
+
+1.  **Deterministic Policy ($\pi(s) = a$)**: For every state, there is exactly *one* action to take. It's like a lookup table. Given state $s$, the action is always $a$. This is Driver A.
+    *   *Pros*: Simple, predictable, fast to execute.
+    *   *Cons*: Can be exploited by adversaries, may get stuck in loops, doesn't explore.
+
+2.  **Stochastic Policy ($\pi(a|s) = P(a|s)$)**: For every state, the policy outputs a *probability distribution* over actions. The robot then *samples* an action from this distribution. This is Driver B making a probabilistic judgment call.
+    *   *Pros*: More robust, enables exploration, harder to predict.
+    *   *Cons*: More complex to represent and learn.
+
+For our walking robot, a stochastic policy is essential. The real world is noisy and unpredictable. A policy that always does *exactly* the same thing will fail when the ground is slightly different than expected. A stochastic policy provides the "wiggle room" for adaptation.
+
+---
+
+## The Formalism: The Policy Function
+
+Formally, a policy $\pi$ maps states to actions.
+
+**Deterministic Policy:**
+
+$$
+\pi: S \rightarrow A
+$$
+
+Where $S$ is the set of all possible states, and $A$ is the set of all possible actions. Given state $s$, the action is $a = \pi(s)$.
+
+**Stochastic Policy:**
+
+$$
+\pi: S \times A \rightarrow [0, 1]
+$$
+
+Here, $\pi(a|s)$ gives the probability of taking action $a$ in state $s$. For any state $s$, the probabilities must sum to 1:
+
+$$
+\sum_{a \in A} \pi(a|s) = 1
+$$
+
+In practice, for continuous action spaces (like motor torques), we often use probability *densities* rather than discrete probabilities, often represented by a Gaussian (Normal) distribution parameterized by a mean and standard deviation.
+
+---
+
+## The Code: Random Walk vs. Heuristic Policy
+
+Let's implement two simple policies for our Unitree G1 robot:
+
+1.  **Random Policy**: At every step, choose a completely random action.
+2.  **Heuristic Policy**: A simple rule-based reflex that tries to stay upright by counteracting tilt.
+
+<CodeBlock language="python" title="lesson_3_1_policy_comparison.py">
+  {PolicyComparisonCode}
+</CodeBlock>
+
+### Breaking Down the Code
+
+1.  **`random_policy(observation)`**: This function ignores the observation entirely and returns a random action vector sampled from a uniform distribution between -1 and 1. This is pure exploration with no exploitation.
+
+2.  **`heuristic_policy(observation)`**: This function implements a simple proportional controller. It reads the robot's pitch (forward/backward tilt) and roll (side-to-side tilt) from the observation and applies corrective torques to the hip and ankle joints. If the robot tilts forward, it pushes back. This is a basic "reflex."
+
+3.  **Comparison Logic**: The main script runs both policies for a fixed number of steps, accumulating a survival reward (from Chapter 2). The policy that keeps the robot upright longer earns a higher score.
+
+---
+
+## The Simulation: Comparing Policy Performance
+
+When you run this code in your MuJoCo environment:
+
+1.  **Random Policy**: The robot will almost immediately fall over. The random torques provide no stability, and the cumulative reward will be very low.
+2.  **Heuristic Policy**: The robot will likely stay upright for significantly longer. The corrective torques, while simple, actively fight against falling. The cumulative reward will be much higher.
+
+This demonstrates a core principle: **even a simple, hand-crafted policy can vastly outperform random actions**. The goal of Reinforcement Learning (Chapter 4 onwards) is to *learn* a policy that is even better than what a human can hand-design.
+
+---
+
+## The Reality Check (Sim-to-Real): From Rules to Noise
+
+A heuristic policy like the one above works reasonably well in a clean simulation. But what happens in the real world?
+
+| Simulation | Reality |
+| :--------- | :------ |
+| Perfect pitch/roll readings from physics engine | IMU sensor noise, drift, and calibration errors |
+| Instantaneous torque application | Motor latency, gear backlash, friction |
+| Flat, rigid ground | Uneven surfaces, soft ground, debris |
+| Known robot dynamics | Wear and tear, slightly different joint stiffness |
+
+A heuristic policy tuned for simulation will likely fail when deployed on a real robot. This is where *learned* policies shine: they can be trained in simulation with **domain randomization** (adding noise and variability) to become robust to real-world conditions. We will explore this in later chapters.
+
+---
+
+## Knowledge Check ✓
+
+1.  **Question 1**: What is the fundamental difference between a deterministic policy and a stochastic policy?
+    a) Deterministic policies are faster to compute.
+    b) Stochastic policies output a probability distribution over actions, while deterministic policies output a single action.
+    c) Stochastic policies can only be used for continuous action spaces.
+    d) Deterministic policies are always better for robot control.
+
+2.  **Question 2**: In the heuristic policy code, why do we multiply the pitch/roll by a gain (`Kp`)?
+    a) To convert radians to degrees.
+    b) To scale the sensor reading into a reasonable motor torque command.
+    c) Because MuJoCo requires it.
+    d) To add randomness to the policy.
+
+3.  **Question 3**: Explain why a random policy performs poorly for the standing task, even though it technically "explores" all possible actions.
+
+---
+
+## Try This
+
+**Tune the Heuristic Gains**:
+1.  Increase `Kp` significantly (e.g., 5.0 or 10.0). What happens? Does the robot oscillate or become unstable?
+2.  Decrease `Kp` to a very small value (e.g., 0.1). Does the robot still stand, or does it fall slowly?
+3.  Add a check for torso height in the heuristic policy. If the height drops below a threshold, apply a larger upward force. Does this improve survival time?
+
+---
+
+## Further Reading
+
+-   Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press. (Chapter 3: The Reinforcement Learning Problem, and Chapter 13: Policy Gradient Methods).
+-   Deisenroth, M. P., Faisal, A. A., & Ong, C. S. (2020). *Mathematics for Machine Learning*. Cambridge University Press. (Chapter 8: When Models Meet Data - for policy function representations).

@@ -13,7 +13,7 @@ def test_random_policy():
     # Construct the absolute path to the XML file
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     model_path = os.path.join(
-        base_dir, "docs", "chapter-01-intro", "code", "unitree_g1.xml"
+        base_dir, "frontend", "docs", "chapter-01-intro", "code", "unitree_g1.xml"
     )
 
     assert os.path.exists(model_path), f"Model file not found at {model_path}"
