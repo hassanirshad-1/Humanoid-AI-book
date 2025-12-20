@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: AI Tutor API
+  version: 1.0.0
+  description: API for the AI Student Tutor chat functionality.
+
+paths:
+  /chat:
+    post:
+      summary: Send a message to the AI Tutor
+      operationId: stream_chat_message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: A streaming response of chat messages.
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '422':
+          description: Validation Error
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+        - context
+      properties:
+        message:
+          type: string
+          description: The user's message.
+        context:
+          type: object
+          properties:
+            current_url:
+              type: string
+              description: The URL of the page the user is currently on.
+            session_id:
+              type: string
+              format: uuid
+              description: The ID of the current chat session. If not provided, a new session is created.
+
+    ChatResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [data, error, end]
+        content:
+          type: string
+          description: The content of the event. For 'data', it's a token of the response. For 'error', it's an error message. For 'end', it's the session ID.
+

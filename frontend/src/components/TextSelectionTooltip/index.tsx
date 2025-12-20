@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from './styles.module.css';
+import { useSelection } from '../../context/SelectionContext';
 
 const BACKEND_URL = 'http://localhost:8000';
 
@@ -9,6 +10,7 @@ interface TooltipPosition {
 }
 
 export default function TextSelectionTooltip(): JSX.Element | null {
+    const { setIsChatOpen, clearSelection } = useSelection();
     const [selectedText, setSelectedText] = useState<string>('');
     const [position, setPosition] = useState<TooltipPosition | null>(null);
     const [translatedText, setTranslatedText] = useState<string | null>(null);
@@ -35,15 +37,15 @@ export default function TextSelectionTooltip(): JSX.Element | null {
         } else {
             // Only hide if clicking outside the tooltip
             setTimeout(() => {
-                const tooltip = document.querySelector(`.${styles.tooltip}`);
-                if (!tooltip?.matches(':hover')) {
+                const tooltipOptions = document.querySelector(`.${styles.tooltipOptions}`);
+                if (!tooltipOptions?.matches(':hover')) {
                     setSelectedText('');
                     setPosition(null);
                     setTranslatedText(null);
                 }
             }, 100);
         }
-    }, []);
+    }, [clearSelection]);
 
     useEffect(() => {
         document.addEventListener('mouseup', handleMouseUp);
@@ -83,11 +85,19 @@ export default function TextSelectionTooltip(): JSX.Element | null {
         }
     };
 
+    const handleAskAI = () => {
+        setIsChatOpen(true);
+        // We close the tooltip but keep selection for ChatUI
+        setPosition(null);
+        setSelectedText('');
+    };
+
     const handleClose = () => {
         setSelectedText('');
         setPosition(null);
         setTranslatedText(null);
         setError(null);
+        clearSelection();
     };
 
     if (!position || !selectedText) {
@@ -106,29 +116,36 @@ export default function TextSelectionTooltip(): JSX.Element | null {
                 ×
             </button>
 
-            {!translatedText && !isLoading && (
-                <button className={styles.translateBtn} onClick={handleTranslate}>
-                    🇵🇰 Translate to Urdu
-                </button>
-            )}
+            <div className={styles.tooltipOptions}>
+                {!translatedText && !isLoading && (
+                    <>
+                        <button className={`${styles.actionBtn} ${styles.askBtn}`} onClick={handleAskAI}>
+                            ✨ Ask AI Tutor
+                        </button>
+                        <button className={`${styles.actionBtn} ${styles.translateBtn}`} onClick={handleTranslate}>
+                            🇵🇰 Translate
+                        </button>
+                    </>
+                )}
 
-            {isLoading && (
-                <div className={styles.loading}>
-                    <span className={styles.spinner}></span>
-                    Translating...
-                </div>
-            )}
-
-            {error && <div className={styles.error}>{error}</div>}
-
-            {translatedText && (
-                <div className={styles.translationResult}>
-                    <div className={styles.translationLabel}>Urdu Translation:</div>
-                    <div className={styles.translatedText} dir="rtl" lang="ur">
-                        {translatedText?.replace(/```html|```/g, '').replace(/<[^>]*>/g, '')}
+                {isLoading && (
+                    <div className={styles.loading}>
+                        <span className={styles.spinner}></span>
+                        Translating...
                     </div>
-                </div>
-            )}
+                )}
+
+                {error && <div className={styles.error}>{error}</div>}
+
+                {translatedText && (
+                    <div className={styles.translationResult}>
+                        <div className={styles.translationLabel}>Urdu Translation:</div>
+                        <div className={styles.translatedText} dir="rtl" lang="ur">
+                            {translatedText?.replace(/```html|```/g, '').replace(/<[^>]*>/g, '')}
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

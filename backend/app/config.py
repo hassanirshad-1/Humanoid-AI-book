@@ -30,8 +30,33 @@ class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     OLLAMA_API_KEY: str = os.getenv("OLLAMA_API_KEY", "ollama")
 
+    # RAG Configuration
+    QDRANT_URL: str = os.getenv("QDRANT_URL", "http://localhost:6333")
+    QDRANT_COLLECTION_NAME: str = "textbook_content"
+    # Resolve MDX path absolute to project root (2 levels up from backend/app/config.py)
+    MDX_DOCS_PATH: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/docs"))
+
     # CORS settings
     FRONTEND_ORIGIN: str = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
+
+    def get_source_url_from_filepath(self, file_path: str) -> str:
+        """Converts a file path to a Docusaurus-compatible URL."""
+        # Example: "frontend/docs/chapter-01-intro/1.1-philosophy.mdx"
+        # Becomes: "/docs/chapter-01-intro/1.1-philosophy"
+        
+        # Remove "frontend/" prefix if it exists
+        if file_path.startswith("frontend/"):
+            file_path = file_path[len("frontend/"):]
+        
+        # Remove .mdx extension
+        if file_path.endswith(".mdx"):
+            file_path = file_path[:-len(".mdx")]
+        
+        # Ensure it starts with /
+        if not file_path.startswith("/"):
+            file_path = "/" + file_path
+            
+        return file_path
 
 
 settings = Settings()

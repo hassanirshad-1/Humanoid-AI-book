@@ -52,24 +52,40 @@
     color: white;
 }
 
-.translateBtn {
+.tooltipOptions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.actionBtn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    width: 100%;
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1rem;
     border: none;
     border-radius: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-.translateBtn:hover {
-    transform: scale(1.02);
+.askBtn {
+    background: linear-gradient(135deg, #00d9ff 0%, #0099ff 100%);
+    box-shadow: 0 4px 15px rgba(0, 217, 255, 0.2);
+}
+
+.translateBtn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.actionBtn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
 }
 
 .loading {
