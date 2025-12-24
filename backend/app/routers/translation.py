@@ -4,23 +4,28 @@ backend/app/routers/translation.py
 API router for the translation endpoint.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 import httpx
 
-from ..models import TranslationRequest, TranslationResponse
-from ..services.translation import translate_text
+from app.models import TranslationRequest, TranslationResponse, User
+from app.services.translation import translate_text
+from app.users import current_active_user
 
 
 router = APIRouter(prefix="/api", tags=["translation"])
 
 
 @router.post("/translate", response_model=TranslationResponse)
-async def translate(request: TranslationRequest) -> TranslationResponse:
+async def translate(
+    request: TranslationRequest,
+    user: User = Depends(current_active_user)
+) -> TranslationResponse:
     """
     Translate text to a target language using the local LLM.
     
     Args:
         request: TranslationRequest containing the text and target language.
+        user: Authenticated user (required).
         
     Returns:
         TranslationResponse with the translated text.

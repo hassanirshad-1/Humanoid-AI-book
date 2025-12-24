@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css'; // Import KaTeX CSS
+import { useAuth } from '../../context/AuthContext';
 
 interface Message {
   id: string;
@@ -20,6 +21,10 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Start: Auth Integration
+  const { isAuthenticated } = useAuth();
+  // End: Auth Integration
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -49,13 +54,21 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
   useEffect(() => {
     if (initialMessage) {
       setInput(initialMessage);
-      // Optionally send the message immediately
-      // handleSendMessage({ preventDefault: () => {} } as React.FormEvent); 
     }
-  }, [initialMessage]); // Only re-run if initialMessage changes
+  }, [initialMessage]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isAuthenticated) {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender: 'ai',
+        content: "You must be logged in to use the AI Tutor. Please [login](/login) or [register](/register)."
+      }]);
+      return;
+    }
+
     if (input.trim()) {
       const userMessage: Message = { id: Date.now().toString(), sender: 'user', content: input.trim() };
       setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -66,10 +79,12 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
       setMessages((prevMessages) => [...prevMessages, aiPlaceholder]);
 
       try {
+        const token = localStorage.getItem('bearer_token');
         const response = await fetch('http://localhost:8000/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             message: userMessage.content,
@@ -81,6 +96,9 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Unauthorized. Please log in again.");
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -101,7 +119,6 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
             try {
               // Determine if it's JSON already or if it needs parsing logic
               // Our backend sends lines like: {"type": "data", "content": "..."}
-              // (Standard SSE format usually requires data prefix, but our manual yield does json lines)
 
               // If the line is valid JSON, parse it
               const data = JSON.parse(line);
@@ -146,10 +163,9 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
       } catch (error) {
         console.error('Error sending message:', error);
         setMessages((prevMessages) => {
-          // ... error handling logic
           const updated = [...prevMessages];
           const lastIdx = updated.findLastIndex(m => m.sender === 'ai');
-          if (lastIdx !== -1) updated[lastIdx].content = "Sorry, I encountered an error connectnig to the Tutor.";
+          if (lastIdx !== -1) updated[lastIdx].content = `Sorry, I encountered an error: ${error.message}`;
           return updated;
         });
       }
@@ -185,6 +201,11 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
                 </button>
               ))}
             </div>
+            {!isAuthenticated && (
+              <div style={{ marginTop: '1rem', padding: '0.5rem', background: 'rgba(255,0,0,0.1)', borderRadius: '8px', border: '1px solid rgba(255,0,0,0.3)', fontSize: '0.9rem' }}>
+                Note: You must <a href="/login">Login</a> to chat with me.
+              </div>
+            )}
           </div>
         ) : (
           messages.map((msg) => (
@@ -211,10 +232,11 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessage }) => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question..."
+          placeholder={isAuthenticated ? "Ask a question..." : "Please login to chat"}
           className={styles.textInput}
+          disabled={!isAuthenticated}
         />
-        <button type="submit" className={styles.sendButton} disabled={!input.trim()}>
+        <button type="submit" className={styles.sendButton} disabled={!input.trim() || !isAuthenticated}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>

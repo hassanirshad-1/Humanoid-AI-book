@@ -103,16 +103,26 @@ A specification is considered "Done" when:
 - **Secrets Management**: All secrets (API keys, database URLs) MUST be managed via a `.env` file and never committed to source control.
 - **Master Reference**: This `GEMINI.md` file is the master reference. It MUST be updated as the project evolves.
 
-## Roadmap / Future Work
+## Project Status & Roadmap
 
-- Create backend folder and initialize uv project
-- Set up RAG pipeline (Qdrant integration)
-- Integrate Neon (Serverless Postgres) for metadata database
-- Implement Better-Auth for authentication
-- Define autonomous AI agents (`agents/` folder)
-- Develop Docusaurus MDX textbook content (`docs/` folder)
-- Expand frontend application (`frontend/` folder)
-- Establish Architecture Decision Records (`history/adr/` folder)
-- Create helper and automation scripts (`scripts/` folder)
-- Create `.env.example` file
+### ✅ Completed
+- **Backend Foundation**: Python 3.12+ project initialized with `uv`.
+- **RAG Pipeline**: Qdrant vector database integration for semantic search across MDX textbook content.
+- **AI Tutor Agent**: Initial `TutorAgent` implementation using OpenAI Agents SDK with retrieval-augmented generation.
+- **Premium Chat UI**: Modern, glassmorphic chat interface in Docusaurus with streaming responses and LaTeX support.
+- **Multilingual Support**: Real-time translation service for textbook content (Urdu supported).
+- **Selection-Based Interaction**: "Ask AI Tutor" and "Translate" features based on user text selection.
+
+### 🚀 Upcoming: Authentication & Personalization (Phase 7)
+- **Better-Auth Integration**: Secure session management and user authentication.
+- **Neon Database**: Serverless Postgres for persistent user data, chat history, and metadata.
+- **User Profiling (POV)**: During onboarding, capture user learning levels (Beginner, Intermediate, etc.) and hardware preferences (e.g., Specific Robot models).
+- **Personalized Learning**: Adapt AI Tutor responses and textbook difficulty based on the stored user profile.
+- **Persistent Chat History**: Store and retrieve chat sessions from Neon DB.
+
+### 🛠️ Continuous / Operational
+- **MDX Content Expansion**: Ongoing development of Chapter 1 and beyond in the `docs/` folder.
+- **ADR Maintenance**: Documenting architectural decisions in `history/adr/`.
+- **Environment Management**: Keep `.env` and `.env.example` synchronized.
+- **Workflow Automation**: Refine SpecKit Plus templates and scripts.
 

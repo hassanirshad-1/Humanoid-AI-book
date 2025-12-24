@@ -3,6 +3,7 @@ import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+// Config updated on 2025-12-21
 
 const config: Config = {
   title: 'Physical AI & Humanoid Robotics',
@@ -88,8 +89,7 @@ const config: Config = {
           label: 'Chapters',
         },
         {
-          href: 'https://github.com/hassanirshad-1/Robotics_book',
-          label: 'GitHub',
+          type: 'custom-userProfile',
           position: 'right',
         },
       ],

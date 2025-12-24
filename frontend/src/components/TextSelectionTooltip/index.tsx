@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from './styles.module.css';
 import { useSelection } from '../../context/SelectionContext';
+import { useAuth } from '../../context/AuthContext';
 
 const BACKEND_URL = 'http://localhost:8000';
 
@@ -11,6 +12,7 @@ interface TooltipPosition {
 
 export default function TextSelectionTooltip(): JSX.Element | null {
     const { setIsChatOpen, clearSelection } = useSelection();
+    const { isAuthenticated } = useAuth();
     const [selectedText, setSelectedText] = useState<string>('');
     const [position, setPosition] = useState<TooltipPosition | null>(null);
     const [translatedText, setTranslatedText] = useState<string | null>(null);
@@ -61,10 +63,12 @@ export default function TextSelectionTooltip(): JSX.Element | null {
         setError(null);
 
         try {
+            const token = localStorage.getItem('bearer_token');
             const response = await fetch(`${BACKEND_URL}/api/translate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     text: selectedText,
@@ -117,7 +121,7 @@ export default function TextSelectionTooltip(): JSX.Element | null {
             </button>
 
             <div className={styles.tooltipOptions}>
-                {!translatedText && !isLoading && (
+                {(isAuthenticated && !translatedText && !isLoading) && (
                     <>
                         <button className={`${styles.actionBtn} ${styles.askBtn}`} onClick={handleAskAI}>
                             ✨ Ask AI Tutor
@@ -126,6 +130,14 @@ export default function TextSelectionTooltip(): JSX.Element | null {
                             🇵🇰 Translate
                         </button>
                     </>
+                )}
+
+                {!isAuthenticated && (
+                    <div className={styles.authPrompt} style={{ padding: '5px' }}>
+                        <button className={`${styles.actionBtn}`} onClick={() => window.location.href = '/login'} style={{ background: 'var(--ifm-color-primary)', color: 'white' }}>
+                            🔒 Login to use AI Tools
+                        </button>
+                    </div>
                 )}
 
                 {isLoading && (

@@ -1,12 +1,17 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any, AsyncGenerator
+from typing import List, Dict, Any, AsyncGenerator, Optional
 import json
 import re
 from agents import Runner
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.agents.tutor_agent import get_tutor_agent
+from app.database import get_session
+from app.models import User
+from app.users import current_active_user
 
 router = APIRouter()
 
@@ -19,33 +24,25 @@ class ChatResponse(BaseModel):
     content: str
     session_id: str = None
 
-async def generate_response_stream(session_id: str, message: str, chapter: str = None) -> AsyncGenerator[str, None]:
+async def generate_response_stream(
+    session_id: str, 
+    message: str, 
+    chapter: str = None,
+    skill_level: str = "Beginner",
+    operating_system: str = "Linux"
+) -> AsyncGenerator[str, None]:
     try:
-        # Initialize the agent with the current chapter context
-        agent = get_tutor_agent(current_chapter=chapter)
-        
-        # Run the agent using the Agents SDK Runner
-        # We don't pass chat history explicitly here because the Agents SDK 
-        # manages conversation state if we were using a persistent Thread.
-        # For this MVP, we treat each request as a new turn (stateless for now, or history could be passed in prompt).
-        # To make it truly conversational, we'd typically append history to the prompt 
-        # or use the SDK's memory if available. For now, we trust the context window.
-        
-        # Stream the response
-        # The Runner.run method doesn't support streaming natively in the same way for all models yet 
-        # in the simplified SDK wrapper, but let's check if we can yield tokens.
-        # If strict streaming is needed, we might use the client directly or check Runner capabilities.
-        # ALLOWANCE: For this specific hackathon step, we will use the standard Runner 
-        # and simulate streaming or yield the final result if "run" is atomic.
-        # HOWEVER, to give the "live" feel, let's assume valid atomic streaming is the goal.
-        
-        # ACTUALLY: The safest path with this specific SDK setup is to await the final response
-        # and then stream it out (simulated) OR use the client.stream() method if we want true token-by-token.
+        # Initialize the agent with the current chapter context and personalization
+        agent = get_tutor_agent(
+            current_chapter=chapter,
+            skill_level=skill_level,
+            operating_system=operating_system
+        )
         
         result = await Runner.run(agent, message)
         final_text = result.final_output
         
-        # Simulate streaming to frontend (since Runner absorbs the stream internally usually)
+        # Simulate streaming to frontend
         chunk_size = 10 
         for i in range(0, len(final_text), chunk_size):
             chunk = final_text[i:i+chunk_size]
@@ -61,7 +58,12 @@ async def generate_response_stream(session_id: str, message: str, chapter: str =
 
 
 @router.post("/chat")
-async def chat_endpoint(chat_request: ChatRequest, request: Request):
+async def chat_endpoint(
+    chat_request: ChatRequest, 
+    request: Request,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_session)
+):
     session_id = chat_request.context.get("session_id") or "new_session"
 
     current_url = chat_request.context.get("current_url")
@@ -72,7 +74,18 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             chapter = match.group(1)
             print(f"DEBUG: Chat context restricted to {chapter}")
 
+    # Use authenticated user's profile
+    skill_level = user.skill_level or "Beginner"
+    operating_system = user.operating_system or "Linux"
+    print(f"DEBUG: Personalized chat for {user.email}: {skill_level}, {operating_system}")
+
     return StreamingResponse(
-        generate_response_stream(session_id, chat_request.message, chapter),
+        generate_response_stream(
+            session_id, 
+            chat_request.message, 
+            chapter,
+            skill_level,
+            operating_system
+        ),
         media_type="text/event-stream"
     )

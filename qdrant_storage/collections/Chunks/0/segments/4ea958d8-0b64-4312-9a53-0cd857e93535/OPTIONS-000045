@@ -5,7 +5,7 @@
 #
 
 [Version]
-  rocksdb_version=9.9.3
+  rocksdb_version=10.4.2
   options_file_version=1.1
 
 [DBOptions]
@@ -40,14 +40,13 @@
   manual_wal_flush=false
   db_host_id=__hostname__
   two_write_queues=false
-  random_access_max_buffer_size=1048576
-  avoid_unnecessary_blocking_io=false
+  allow_ingest_behind=false
   skip_checking_sst_file_sizes_on_db_open=false
   flush_verify_memtable_count=true
-  fail_if_options_file_error=true
   atomic_flush=false
   verify_sst_unique_id_in_manifest=true
   skip_stats_update_on_db_open=false
+  track_and_verify_wals=false
   track_and_verify_wals_in_manifest=false
   compaction_verify_record_count=true
   paranoid_checks=true
@@ -67,8 +66,9 @@
   use_direct_reads=false
   persist_stats_to_disk=false
   allow_2pc=false
-  is_fd_close_on_exec=true
   max_log_file_size=1048576
+  is_fd_close_on_exec=true
+  avoid_unnecessary_blocking_io=false
   max_file_opening_threads=16
   wal_filter=nullptr
   wal_write_temperature=kUnknown
@@ -80,7 +80,6 @@
   table_cache_numshardbits=6
   dump_malloc_stats=false
   db_write_buffer_size=0
-  allow_ingest_behind=false
   keep_log_file_num=1
   max_bgerror_resume_count=2147483647
   allow_concurrent_memtable_write=true
@@ -101,8 +100,10 @@
 
 [CFOptions "default"]
   memtable_max_range_deletions=0
+  compression_manager=nullptr
   compression_opts={checksum=false;max_dict_buffer_bytes=0;enabled=false;max_dict_bytes=0;max_compressed_bytes_per_kb=896;parallel_threads=1;zstd_max_train_bytes=0;level=32767;use_zstd_dict_trainer=true;strategy=0;window_bits=-14;}
   paranoid_memory_checks=false
+  memtable_avg_op_scan_flush_trigger=0
   block_protection_bytes_per_key=0
   uncache_aggressiveness=0
   bottommost_file_compaction_delay=0
@@ -121,6 +122,7 @@
   write_buffer_size=10485760
   strict_max_successive_merges=false
   arena_block_size=1048576
+  memtable_op_scan_flush_trigger=0
   level0_file_num_compaction_trigger=4
   report_bg_io_stats=false
   inplace_update_num_locks=10000
@@ -143,13 +145,13 @@
   max_bytes_for_level_base=268435456
   last_level_temperature=kUnknown
   preserve_internal_time_seconds=0
-  compaction_options_fifo={file_temperature_age_thresholds=;allow_compaction=false;age_for_warm=0;max_table_files_size=1073741824;}
+  compaction_options_fifo={trivial_copy_buffer_size=4096;allow_trivial_copy_when_change_temperature=false;file_temperature_age_thresholds=;allow_compaction=false;age_for_warm=0;max_table_files_size=1073741824;}
   max_bytes_for_level_multiplier=10.000000
   max_bytes_for_level_multiplier_additional=1:1:1:1:1:1:1
   max_sequential_skip_in_iterations=8
   compression=kLZ4Compression
   default_write_temperature=kUnknown
-  compaction_options_universal={incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;max_read_amp=-1;size_ratio=1;}
+  compaction_options_universal={reduce_file_locking=false;incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;max_read_amp=-1;size_ratio=1;}
   blob_garbage_collection_age_cutoff=0.250000
   ttl=2592000
   periodic_compaction_seconds=0
@@ -166,16 +168,16 @@
   level_compaction_dynamic_level_bytes=true
   optimize_filters_for_hits=false
   inplace_update_support=false
-  max_write_buffer_number_to_maintain=0
   max_write_buffer_size_to_maintain=0
-  sst_partitioner_factory=nullptr
-  default_temperature=kUnknown
-  compaction_style=kCompactionStyleLevel
-  min_write_buffer_number_to_merge=1
   memtable_factory=SkipListFactory
   memtable_insert_with_hint_prefix_extractor=nullptr
-  force_consistency_checks=true
   num_levels=7
+  force_consistency_checks=true
+  sst_partitioner_factory=nullptr
+  default_temperature=kUnknown
+  disallow_memtable_writes=false
+  compaction_style=kCompactionStyleLevel
+  min_write_buffer_number_to_merge=1
   
 [TableOptions/BlockBasedTable "default"]
   num_file_reads_for_auto_readahead=2
@@ -213,10 +215,12 @@
   flush_block_policy_factory=FlushBlockBySizePolicyFactory
   
 
-[CFOptions "mapping"]
+[CFOptions "payload"]
   memtable_max_range_deletions=0
+  compression_manager=nullptr
   compression_opts={checksum=false;max_dict_buffer_bytes=0;enabled=false;max_dict_bytes=0;max_compressed_bytes_per_kb=896;parallel_threads=1;zstd_max_train_bytes=0;level=32767;use_zstd_dict_trainer=true;strategy=0;window_bits=-14;}
   paranoid_memory_checks=false
+  memtable_avg_op_scan_flush_trigger=0
   block_protection_bytes_per_key=0
   uncache_aggressiveness=0
   bottommost_file_compaction_delay=0
@@ -235,6 +239,7 @@
   write_buffer_size=10485760
   strict_max_successive_merges=false
   arena_block_size=1048576
+  memtable_op_scan_flush_trigger=0
   level0_file_num_compaction_trigger=4
   report_bg_io_stats=false
   inplace_update_num_locks=10000
@@ -257,13 +262,13 @@
   max_bytes_for_level_base=268435456
   last_level_temperature=kUnknown
   preserve_internal_time_seconds=0
-  compaction_options_fifo={file_temperature_age_thresholds=;allow_compaction=false;age_for_warm=0;max_table_files_size=1073741824;}
+  compaction_options_fifo={trivial_copy_buffer_size=4096;allow_trivial_copy_when_change_temperature=false;file_temperature_age_thresholds=;allow_compaction=false;age_for_warm=0;max_table_files_size=1073741824;}
   max_bytes_for_level_multiplier=10.000000
   max_bytes_for_level_multiplier_additional=1:1:1:1:1:1:1
   max_sequential_skip_in_iterations=8
   compression=kLZ4Compression
   default_write_temperature=kUnknown
-  compaction_options_universal={incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;max_read_amp=-1;size_ratio=1;}
+  compaction_options_universal={reduce_file_locking=false;incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;max_read_amp=-1;size_ratio=1;}
   blob_garbage_collection_age_cutoff=0.250000
   ttl=2592000
   periodic_compaction_seconds=0
@@ -280,18 +285,18 @@
   level_compaction_dynamic_level_bytes=true
   optimize_filters_for_hits=false
   inplace_update_support=false
-  max_write_buffer_number_to_maintain=0
   max_write_buffer_size_to_maintain=0
-  sst_partitioner_factory=nullptr
-  default_temperature=kUnknown
-  compaction_style=kCompactionStyleLevel
-  min_write_buffer_number_to_merge=1
   memtable_factory=SkipListFactory
   memtable_insert_with_hint_prefix_extractor=nullptr
-  force_consistency_checks=true
   num_levels=7
+  force_consistency_checks=true
+  sst_partitioner_factory=nullptr
+  default_temperature=kUnknown
+  disallow_memtable_writes=false
+  compaction_style=kCompactionStyleLevel
+  min_write_buffer_number_to_merge=1
   
-[TableOptions/BlockBasedTable "mapping"]
+[TableOptions/BlockBasedTable "payload"]
   num_file_reads_for_auto_readahead=2
   initial_auto_readahead_size=8192
   metadata_cache_options={unpartitioned_pinning=kFallback;partition_pinning=kFallback;top_level_index_pinning=kFallback;}
@@ -327,10 +332,12 @@
   flush_block_policy_factory=FlushBlockBySizePolicyFactory
   
 
-[CFOptions "version"]
+[CFOptions "vector"]
   memtable_max_range_deletions=0
+  compression_manager=nullptr
   compression_opts={checksum=false;max_dict_buffer_bytes=0;enabled=false;max_dict_bytes=0;max_compressed_bytes_per_kb=896;parallel_threads=1;zstd_max_train_bytes=0;level=32767;use_zstd_dict_trainer=true;strategy=0;window_bits=-14;}
   paranoid_memory_checks=false
+  memtable_avg_op_scan_flush_trigger=0
   block_protection_bytes_per_key=0
   uncache_aggressiveness=0
   bottommost_file_compaction_delay=0
@@ -349,6 +356,7 @@
   write_buffer_size=10485760
   strict_max_successive_merges=false
   arena_block_size=1048576
+  memtable_op_scan_flush_trigger=0
   level0_file_num_compaction_trigger=4
   report_bg_io_stats=false
   inplace_update_num_locks=10000
@@ -371,13 +379,13 @@
   max_bytes_for_level_base=268435456
   last_level_temperature=kUnknown
   preserve_internal_time_seconds=0
-  compaction_options_fifo={file_temperature_age_thresholds=;allow_compaction=false;age_for_warm=0;max_table_files_size=1073741824;}
+  compaction_options_fifo={trivial_copy_buffer_size=4096;allow_trivial_copy_when_change_temperature=false;file_temperature_age_thresholds=;allow_compaction=false;age_for_warm=0;max_table_files_size=1073741824;}
   max_bytes_for_level_multiplier=10.000000
   max_bytes_for_level_multiplier_additional=1:1:1:1:1:1:1
   max_sequential_skip_in_iterations=8
   compression=kLZ4Compression
   default_write_temperature=kUnknown
-  compaction_options_universal={incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;max_read_amp=-1;size_ratio=1;}
+  compaction_options_universal={reduce_file_locking=false;incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;max_read_amp=-1;size_ratio=1;}
   blob_garbage_collection_age_cutoff=0.250000
   ttl=2592000
   periodic_compaction_seconds=0
@@ -394,18 +402,18 @@
   level_compaction_dynamic_level_bytes=true
   optimize_filters_for_hits=false
   inplace_update_support=false
-  max_write_buffer_number_to_maintain=0
   max_write_buffer_size_to_maintain=0
-  sst_partitioner_factory=nullptr
-  default_temperature=kUnknown
-  compaction_style=kCompactionStyleLevel
-  min_write_buffer_number_to_merge=1
   memtable_factory=SkipListFactory
   memtable_insert_with_hint_prefix_extractor=nullptr
-  force_consistency_checks=true
   num_levels=7
+  force_consistency_checks=true
+  sst_partitioner_factory=nullptr
+  default_temperature=kUnknown
+  disallow_memtable_writes=false
+  compaction_style=kCompactionStyleLevel
+  min_write_buffer_number_to_merge=1
   
-[TableOptions/BlockBasedTable "version"]
+[TableOptions/BlockBasedTable "vector"]
   num_file_reads_for_auto_readahead=2
   initial_auto_readahead_size=8192
   metadata_cache_options={unpartitioned_pinning=kFallback;partition_pinning=kFallback;top_level_index_pinning=kFallback;}

@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import chat, translation
-from app.services import indexing_service # Only for type hinting or initial setup if needed
+from app.users import auth_backend, fastapi_users
+from app.models import UserRead, UserCreate, UserUpdate
 
 app = FastAPI()
 
@@ -13,8 +14,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Authentication Routers (FastAPI Users)
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["users"],
+)
+
+# Feature Routers
 app.include_router(chat.router)
 app.include_router(translation.router)
+# Old users router replaced by fastapi-users
+# app.include_router(users.router) 
 
 @app.get("/")
 async def root():
