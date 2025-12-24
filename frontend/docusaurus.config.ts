@@ -19,12 +19,12 @@ const config: Config = {
   url: 'https://hassanirshad-1.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/Robotics_book/',
+  baseUrl: '/Humanoid-AI-book/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'hassanirshad-1', // Usually your GitHub org/user name.
-  projectName: 'Robotics_book', // Usually your repo name.
+  projectName: 'Humanoid-AI-book', // Usually your repo name.
 
   onBrokenLinks: 'throw',
 
@@ -46,7 +46,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/hassanirshad-1/Robotics_book/tree/main/',
+            'https://github.com/hassanirshad-1/Humanoid-AI-book/tree/main/',
           remarkPlugins: [require('remark-math')],
           rehypePlugins: [require('rehype-katex')],
         },
