@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "@testing-library/react": "^16.3.1",
+    "jest": "^30.2.0"
+  },
+  "dependencies": {
+    "katex": "^0.16.27",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0"
+  }
+}

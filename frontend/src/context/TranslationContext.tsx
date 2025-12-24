@@ -70,10 +70,12 @@ export function TranslationProvider({
         try {
             // The backend service expects 'text', but our service handles HTML chunking.
             // So sending innerHTML is correct for our 'translate_text' service.
+            const token = localStorage.getItem('bearer_token');
             const response = await fetch(`${BACKEND_URL}/api/translate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     text: currentHTML,

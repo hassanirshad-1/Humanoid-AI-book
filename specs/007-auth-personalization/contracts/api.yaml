@@ -1,0 +1,94 @@
+openapi: 3.0.3
+info:
+  title: Personalized Content API (Refined)
+  version: 1.1.0
+  description: >
+    API for retrieving and updating user personalization settings.
+    Authentication is handled by a separate Better-Auth service. This backend
+    validates the session token provided by the frontend.
+
+paths:
+  /users/me:
+    get:
+      summary: Get current user's profile
+      description: >
+        Retrieves the profile of the user associated with the session token
+        provided in the Authorization header.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The current user's profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRead'
+        '401':
+          description: Unauthorized (invalid or expired session token).
+
+    patch:
+      summary: Update current user's profile
+      description: >
+        Updates the personalization settings for the user associated with the
+        session token.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: The updated user profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRead'
+        '401':
+          description: Unauthorized (invalid or expired session token).
+        '422':
+          description: Validation Error.
+
+components:
+  schemas:
+    UserRead:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        skill_level:
+          type: string
+          nullable: true
+          enum: [Beginner, Intermediate, Advanced]
+        operating_system:
+          type: string
+          nullable: true
+
+    UserUpdate:
+      type: object
+      properties:
+        skill_level:
+          type: string
+          nullable: true
+          enum: [Beginner, Intermediate, Advanced]
+        operating_system:
+          type: string
+          nullable: true
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        A session token issued by the Better-Auth service.

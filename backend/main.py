@@ -1,48 +1,49 @@
-"""
-backend/main.py
-
-Main FastAPI application entry point.
-
-Run with: uv run uvicorn main:app --reload
-"""
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers import chat, translation
+from app.users import auth_backend, fastapi_users
+from app.models import UserRead, UserCreate, UserUpdate
 
-from app.config import settings
-from app.routers import translation
+app = FastAPI()
 
-# Create FastAPI application
-app = FastAPI(
-    title="Robotics Book Backend",
-    description="Backend API for the AI-native Robotics Textbook",
-    version="0.1.0",
-)
-
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_ORIGIN,
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(translation.router)
+# Authentication Routers (FastAPI Users)
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["users"],
+)
 
+# Feature Routers
+app.include_router(chat.router)
+app.include_router(translation.router)
+# Old users router replaced by fastapi-users
+# app.include_router(users.router) 
 
 @app.get("/")
 async def root():
-    """Root endpoint for health check."""
-    return {"status": "ok", "message": "Robotics Book Backend API"}
+    return {"message": "AI Tutor Backend is running!"}
 
+def start_server():
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
+if __name__ == "__main__":
+    start_server()

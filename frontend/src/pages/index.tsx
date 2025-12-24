@@ -6,10 +6,14 @@ import Layout from '@theme/Layout';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import RobotAnimation from '@site/src/components/RobotAnimation';
 import Heading from '@theme/Heading';
+import { useAuth } from '@site/src/context/AuthContext';
 
 import styles from './index.module.css';
 
 function HomepageHeader() {
+  const { isAuthenticated } = useAuth();
+  const startPath = isAuthenticated ? "/chapter-01-intro/1.1-philosophy" : "/login";
+
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className={styles.heroContainer}>
@@ -26,8 +30,8 @@ function HomepageHeader() {
           <div className={styles.buttons}>
             <Link
               className="button button--secondary button--lg"
-              to="/chapter-01-intro/1.1-philosophy">
-              Start Learning →
+              to={startPath}>
+              {isAuthenticated ? "Continue Learning →" : "Start Learning →"}
             </Link>
             <Link
               className={styles.secondaryButton}
