@@ -3,6 +3,8 @@
 > **An AI-Native, Interactive Learning Platform**
 > *Learn Robotics with a Personal AI Tutor*
 
+**🔗 Live Demo:** [https://hassanirshad-1.github.io/Humanoid-AI-book/](https://hassanirshad-1.github.io/Humanoid-AI-book/)
+
 [![Built with Docusaurus](https://img.shields.io/badge/built%20with-docusaurus-3ecc5f.svg)](https://docusaurus.io)
 [![FastAPI Backend](https://img.shields.io/badge/backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com)
 [![AI Powered](https://img.shields.io/badge/AI-Powered-blueviolet.svg)](https://openai.com)
